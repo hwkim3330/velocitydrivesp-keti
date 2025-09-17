@@ -1,14 +1,13 @@
 import { Transport } from './transport.js';
+import { CoreconfClient } from './core/coreconf.js';
 import { DeviceView } from './views/device.js';
 import { CoreconfView } from './views/coreconf.js';
 import { TsnView } from './views/tsn.js';
 import { PsfpView } from './views/psfp.js';
 import { LogsView } from './views/logs.js';
 
-const state = {
-  transport: new Transport(),
-  connected: false,
-};
+const state = { transport: new Transport(), connected: false };
+state.coreconf = new CoreconfClient(state);
 
 const views = {
   device: new DeviceView(state),
@@ -40,4 +39,3 @@ setInterval(()=>{
 
 // default
 render('device');
-
