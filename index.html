@@ -93,7 +93,17 @@
           <button class="btn p" onclick="applyPresetAll()">프리셋 즉시 적용</button>
         </div>
         <div class="grid" style="margin-top:12px">
-          <div class="card"><div class="card-h">TAS</div><div class="card-b"><input class="inp" id="tasCycleNs" placeholder="Cycle ns" value="1000000" style="margin-bottom:8px"><input class="inp" id="tasBaseTimeNs" placeholder="Base time ns (0=now)" value="0" style="margin-bottom:8px"><input class="inp" id="tasGates" placeholder="Gate masks e.g., FF,FF,FF" style="margin-bottom:8px"><button class="btn p" onclick="applyTAS()">Apply TAS</button></div></div>
+          <div class="card"><div class="card-h">TAS</div><div class="card-b"><input class="inp" id="tasCycleNs" placeholder="Cycle ns" value="1000000" style="margin-bottom:8px"><input class="inp" id="tasBaseTimeNs" placeholder="Base time ns (0=now)" value="0" style="margin-bottom:8px"><input class="inp" id="tasGates" placeholder="Gate masks e.g., FF,FF,FF" style="margin-bottom:8px"><button class="btn p" onclick="applyTAS()">Apply TAS</button>
+              <div style="margin-top:10px;font-weight:800;color:#6b7280">Control List (optional)</div>
+              <div class="row" style="margin-top:6px">
+                <input class="inp" id="tasEntryIndex" placeholder="index" style="max-width:110px">
+                <input class="inp" id="tasEntryState" placeholder="gate-state-value (hex)" style="max-width:220px">
+                <input class="inp" id="tasEntryTime" placeholder="time-interval-value (ns)" style="max-width:220px">
+                <input class="inp" id="tasEntryOp" placeholder="operation-name (optional)" style="max-width:240px">
+                <button class="btn" onclick="addTasEntry()">Add</button>
+              </div>
+              <div id="tasEntries" class="log" style="height:160px;margin-top:8px"></div>
+            </div></div>
           <div class="card"><div class="card-h">CBS</div><div class="card-b"><input class="inp" id="cbsClass" placeholder="Class (0-7)" value="3" style="margin-bottom:8px"><input class="inp" id="cbsIdleSlope" placeholder="Idle Slope (kbps)" style="margin-bottom:8px"><input class="inp" id="cbsSendSlope" placeholder="Send Slope (kbps)" style="margin-bottom:8px"><button class="btn p" onclick="applyCBS()">Apply CBS</button></div></div>
           <div class="card"><div class="card-h">PTP</div><div class="card-b"><input class="inp" id="ptpInstance" placeholder="Instance" value="0" style="margin-bottom:8px"><input class="inp" id="ptpDomain" placeholder="Domain" value="0" style="margin-bottom:8px"><select class="inp" id="ptpTwoStep" style="margin-bottom:8px"><option>true</option><option>false</option></select><button class="btn p" onclick="applyPTP()">Apply PTP</button></div></div>
         </div>
@@ -139,6 +149,9 @@
   async function sendCoapRequest(method,uri,payload=null){await enterCoapMode();const msg=coap.buildMessage(method,uri,payload);const frame=mup1.createCoapDataFrame(msg);await writer.write(new TextEncoder().encode(frame));const id=coap.messageId-1;log('SEND',method,id,frame.length,`${method} ${uri}`);return new Promise((res,rej)=>{const to=setTimeout(()=>{pendingRequests.delete(id);rej(new Error('timeout'))},10000);pendingRequests.set(id,{resolve:res,reject:rej,timeout:to})})}
 
   function log(dir,type,id,len,data){const out=document.getElementById('logOutput');if(!out)return;const t=new Date().toLocaleTimeString();const div=document.createElement('div');div.textContent=`${t} ${dir} ${type} ${id??''} (${len}B) ${data??''}`;out.appendChild(div);out.scrollTop=out.scrollHeight}
+  function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
+  function validInt(v){return /^-?\d+$/.test(String(v).trim())}
+  function validHexMask(v){return /^[0-9a-fA-F]{2}$/.test(String(v).trim())}
 
   // YANG maps
   function yangToSid(data){if(!data||typeof data!=='object')return data;const res={};function conv(path,val){if(window.yangToSidMap&&window.yangToSidMap[path])return{[window.yangToSidMap[path]]:val};return{[path]:val}}for(const [k,v] of Object.entries(data)){if(typeof v==='object'&&v&&!Array.isArray(v)){Object.assign(res,yangToSid(v))}else{Object.assign(res,conv(k,v))}}return res}
@@ -146,7 +159,11 @@
 
   // TSN/PSFP
   async function loadInterfaces(){if(!isConnected)return alert('Connect first');const r=await sendCoapRequest('GET','/ietf-interfaces:interfaces');if(!r.payload)return;const dec=mapSidsToYang(cbor.decode(r.payload));const names=[];for(const [k,v] of Object.entries(dec)){if(typeof v==='string'&&k.endsWith('/ietf-interfaces:interfaces/interface/name'))names.push(v)}const sel=document.getElementById('ifaceSelect');sel.innerHTML='';names.sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)});sel.onchange=()=>{if(sel.value)document.getElementById('tsnIface').value=sel.value}}
-  async function applyTAS(){const ifn=document.getElementById('tsnIface').value.trim();if(!ifn)return alert('iface');const cyc=parseInt(document.getElementById('tasCycleNs').value||'0',10);const base=parseInt(document.getElementById('tasBaseTimeNs').value||'0',10);const gates=((document.getElementById('tasGates').value||'').trim()).split(',').map(s=>s.trim()).filter(Boolean);const path=`/ieee802-dot1q-sched:interfaces/interface[name='${ifn}']/gate-parameters`;const yang={};yang[path]={'admin-base-time':base,'admin-cycle-time':cyc,'admin-control-list':gates.map((m,i)=>({'index':i,'gate-states':m}))};const payload=cbor.encode(yangToSid(yang));const resp=await sendCoapRequest('PUT',path,payload);alert('TAS '+resp.code)}
+  async function applyTAS(){const ifn=document.getElementById('tsnIface').value.trim();if(!ifn)return alert('iface');const cyc=parseInt(document.getElementById('tasCycleNs').value||'0',10);const base=parseInt(document.getElementById('tasBaseTimeNs').value||'0',10);const path=`/ieee802-dot1q-sched:interfaces/interface[name='${ifn}']/gate-parameters`;const yang={}; if(window.tasList&&window.tasList.length){yang[path]={'admin-base-time':base,'admin-cycle-time':cyc,'admin-control-list':{'gate-control-entry': window.tasList.map(e=>({...e}))}}} else {const gates=((document.getElementById('tasGates').value||'').trim()).split(',').map(s=>s.trim()).filter(Boolean); yang[path]={'admin-base-time':base,'admin-cycle-time':cyc,'admin-control-list':gates.map((m,i)=>({'index':i,'gate-states':m}))};} const payload=cbor.encode(yangToSid(yang));const resp=await sendCoapRequest('PUT',path,payload);toast('TAS '+resp.code)}
+  // TAS control list builder
+  window.tasList=[];
+  function renderTasList(){const el=document.getElementById('tasEntries');if(!el)return;el.innerHTML=''; if(!window.tasList.length){el.textContent='(no entries)'; return;} window.tasList.forEach((e,ix)=>{const row=document.createElement('div');row.textContent=`#${e.index} state=${e['gate-state-value']} time=${e['time-interval-value']} op=${e['operation-name']||''}`;const btn=document.createElement('button');btn.className='btn';btn.style.marginLeft='8px';btn.textContent='Remove';btn.onclick=()=>{window.tasList.splice(ix,1);renderTasList()};const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.alignItems='center';wrap.style.gap='8px';wrap.appendChild(row);wrap.appendChild(btn);el.appendChild(wrap)});}
+  function addTasEntry(){const idx=document.getElementById('tasEntryIndex').value.trim(), st=document.getElementById('tasEntryState').value.trim(), ti=document.getElementById('tasEntryTime').value.trim(), op=document.getElementById('tasEntryOp').value.trim(); if(!validInt(idx)||!validHexMask(st)||!validInt(ti)){toast('index int, state hex(2), time int(ns)'); return;} window.tasList.push({'index':parseInt(idx,10),'gate-state-value':st,'time-interval-value':parseInt(ti,10),...(op?{'operation-name':op}:{})}); renderTasList();}
   async function applyCBS(){const ifn=document.getElementById('tsnIface').value.trim();if(!ifn)return alert('iface');const cls=parseInt(document.getElementById('cbsClass').value||'0',10);const idle=parseInt(document.getElementById('cbsIdleSlope').value||'0',10);const send=parseInt(document.getElementById('cbsSendSlope').value||'0',10);const path=`/ieee802-dot1q-sched:interfaces/interface[name='${ifn}']/scheduler`;const yang={};yang[path]={'traffic-class-table':[{'traffic-class':cls,'idle-slope':idle,'send-slope':send}]};const resp=await sendCoapRequest('PUT',path,cbor.encode(yangToSid(yang)));alert('CBS '+resp.code)}
   async function applyPTP(){const inst=(document.getElementById('ptpInstance').value||'0').trim();const dom=parseInt(document.getElementById('ptpDomain').value||'0',10);const two=document.getElementById('ptpTwoStep').value==='true';const path=`/ieee1588-ptp:ptp/instance[instance-index='${inst}']`;const yang={};yang[path]={'domain-number':dom,'two-step-flag':two};const resp=await sendCoapRequest('PUT',path,cbor.encode(yangToSid(yang)));alert('PTP '+resp.code)}
   function psfpBase(){return '/ieee802-dot1q-bridge:bridges/bridge/component/ieee802-dot1q-psfp-bridge:'}
@@ -158,7 +175,7 @@
   // YANG tree
   function searchYangPaths(q){/* optional: can implement filtering UI */}
   window.selectYangPath=(path,sid)=>{selectedPath=path;const i=document.getElementById('configPath');if(i)i.value=path}
-
+  
   // Coreconf loading
   function buildProxiedUrl(url, proxyBase){if(!proxyBase)return url;const b=String(proxyBase).trim();if(/\/$/.test(b)&&b.includes('corsproxy.io'))return `${b}${encodeURIComponent(url)}`;if(/\/(fetch|proxy)$/.test(b))return `${b}?url=${encodeURIComponent(url)}`;return `${b.replace(/\/$/,'')}/fetch?url=${encodeURIComponent(url)}`}
   async function extractSidFromArchive(bytes,name){const low=(name||'').toLowerCase();let tar=bytes;if(low.endsWith('.tgz')||low.endsWith('.tar.gz')||(bytes[0]===0x1f&&bytes[1]===0x8b)){if(typeof DecompressionStream==='undefined')throw new Error('No gzip support');const ds=new DecompressionStream('gzip');const gun=new Uint8Array(await new Response(new Response(bytes).body.pipeThrough(ds)).arrayBuffer());tar=gun}const files=parseTar(tar), mapping={}, stats={};for(const f of files){if(f.name.endsWith('.sid')){try{const j=JSON.parse(new TextDecoder().decode(f.data));const mn=j['module-name']||'unknown';let c=0;(j.items||[]).forEach(it=>{if(it.namespace==='data'&&it.sid&&it.identifier){mapping[it.sid]=it.identifier;c++}});stats[mn]=c}catch{}}}return {mapping,moduleStats:stats}}
@@ -178,5 +195,6 @@
     try{ const sel=document.getElementById('tsnPreset'); if (sel && window.TSNPRESETS){ Object.keys(window.TSNPRESETS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);}); } }catch{}
   });
   </script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
