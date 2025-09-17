@@ -2027,13 +2027,11 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('SID storage load failed:', e);
   }
 
-  // If no mapping yet, auto-fetch from GitHub repo's coreconf folder
+  // If no mapping yet, try auto-load from configurable sources
   if ((!window.yangSidMap || Object.keys(window.yangSidMap).length === 0)) {
-    autoLoadCoreconfFromGitHub()
+    autoLoadCoreconf()
       .then(loaded => {
-        if (loaded) {
-          logMessage('INFO', 'SID', null, 0, `Auto-fetched coreconf: ${Object.keys(window.yangSidMap).length} entries`);
-        }
+        if (loaded) logMessage('INFO', 'SID', null, 0, `Auto-fetched coreconf: ${Object.keys(window.yangSidMap).length} entries`);
       })
       .catch(err => console.warn('Auto coreconf load failed:', err));
   }
@@ -2129,11 +2127,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   
-  async function autoLoadCoreconfFromGitHub() {
+  async function autoLoadCoreconf() {
+    // Try stored config
+    const storedCfg = localStorage.getItem('velocitydrivesp_coreconf_config');
+    let sources = [];
+    if (storedCfg) {
+      try { sources = JSON.parse(storedCfg)?.coreconfSources || []; } catch {}
+    }
+
+    // Try config.json if no stored config
+    if (!sources.length) {
+      try {
+        const res = await fetch('config.json', { cache: 'no-store' });
+        if (res.ok) {
+          const cfg = await res.json();
+          sources = cfg?.coreconfSources || [];
+        }
+      } catch {}
+    }
+
+    for (const src of sources) {
+      if (src.type === 'githubContents') {
+        const ok = await loadFromGitHubContents(src.owner, src.repo, src.path || '');
+        if (ok) return true;
+      }
+      // Future: add 'zipUrl' with JSZip/tar support here
+    }
+    return false;
+  }
+
+  async function loadFromGitHubContents(owner, repo, path) {
     try {
-      const repo = 'hwkim3330/velocitydrivesp-keti';
-      const path = 'coreconf'; // place .sid files here in the repo
-      const api = `https://api.github.com/repos/${repo}/contents/${encodeURIComponent(path)}`;
+      const api = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
       const res = await fetch(api, { headers: { 'Accept': 'application/vnd.github+json' } });
       if (!res.ok) return false;
       const list = await res.json();
@@ -2162,9 +2187,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
             moduleStats[moduleName] = count;
-          } catch (_) {
-            // ignore
-          }
+          } catch (_) {}
         }
       }
       await Promise.all(Array.from({ length: Math.min(concurrency, sidFiles.length) }, () => worker()));
@@ -2173,8 +2196,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.yangSidMap = mapping;
         window.moduleStats = moduleStats;
         window.SIDStorage?.save && window.SIDStorage.save(mapping);
-
-        // Render tree if ready
         if (window.YangTreeBuilder) {
           const treeBuilder = new YangTreeBuilder(window.yangSidMap);
           treeBuilder.renderTree('yangTree');
@@ -2183,10 +2204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
       }
       return false;
-    } catch (e) {
-      console.warn('Auto-load coreconf error:', e);
-      return false;
-    }
+    } catch { return false; }
   }
 });
 </script>

@@ -1,0 +1,11 @@
+{
+  "coreconfSources": [
+    {
+      "type": "githubContents",
+      "owner": "hwkim3330",
+      "repo": "velocitydrivesp-keti",
+      "path": "coreconf"
+    }
+  ]
+}
+
