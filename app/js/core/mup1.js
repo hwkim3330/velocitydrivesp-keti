@@ -2,8 +2,13 @@ export class MUP1 {
   createCoapInitFrame(){ return '>c\n'; }
   createCoapDataFrame(coapBytes){
     const hex = Array.from(coapBytes).map(b=>b.toString(16).padStart(2,'0')).join('');
-    let cs=0; for(let i=0;i<coapBytes.length;i++) cs^=coapBytes[i];
-    return `>d${hex}<<${cs.toString(16).padStart(4,'0')}\n`;
+    // 16-bit one's complement checksum over the ASCII of the frame prefix and data
+    const frameBody = `>d${hex}<<`;
+    let sum = 0;
+    for(let i=0;i<frameBody.length;i++) sum = (sum + frameBody.charCodeAt(i)) & 0xFFFF;
+    sum = (~sum) & 0xFFFF;
+    const cs = sum.toString(16).toUpperCase().padStart(4,'0');
+    return `${frameBody}${cs}\n`;
   }
   parseFrame(line){
     if(line.startsWith('>P')) return {type:'ping-response', data:line};
@@ -18,4 +23,3 @@ export class MUP1 {
     return {type:'unknown', data:line};
   }
 }
-

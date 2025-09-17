@@ -1,9 +1,0 @@
-export class TsnView{
-  constructor(state){ this.state=state; }
-  el(){
-    const w=document.createElement('div'); w.className='card';
-    w.innerHTML=`<div class="card-h">TSN</div><div class="card-b"><div class="row"><input class="inp" id="ifn" placeholder="Interface (e.g., eth0)" style="flex:2"><button class="btn" id="load">Load Interfaces</button></div><div class="row" style="margin-top:8px;gap:8px"><select class="inp" id="preset" style="flex:2"><option value="">(Preset 선택)</option></select><button class="btn" id="applyFields">필드 반영</button><button class="btn p" id="applyAll">즉시 적용</button></div><div class="row" style="margin-top:12px"><div class="card" style="flex:1"><div class="card-h">TAS</div><div class="card-b"><input class="inp" id="tasCyc" placeholder="Cycle ns" value="1000000" style="margin-bottom:8px"><input class="inp" id="tasBase" placeholder="Base time ns (0=now)" value="0" style="margin-bottom:8px"><input class="inp" id="tasGates" placeholder="Gate masks e.g., FF,FF,FF"></div></div><div class="card" style="flex:1"><div class="card-h">CBS</div><div class="card-b"><input class="inp" id="cbsClass" placeholder="Class (0-7)" value="3" style="margin-bottom:8px"><input class="inp" id="cbsIdle" placeholder="Idle Slope (kbps)" style="margin-bottom:8px"><input class="inp" id="cbsSend" placeholder="Send Slope (kbps)"></div></div><div class="card" style="flex:1"><div class="card-h">PTP</div><div class="card-b"><input class="inp" id="ptpInst" placeholder="Instance" value="0" style="margin-bottom:8px"><input class="inp" id="ptpDom" placeholder="Domain" value="0" style="margin-bottom:8px"><select class="inp" id="ptpTwo"><option>true</option><option>false</option></select></div></div></div></div>`;
-    const sel=w.querySelector('#preset'); if (sel && window.TSNPRESETS){ Object.keys(window.TSNPRESETS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);}); }
-    return w;
-  }
-}

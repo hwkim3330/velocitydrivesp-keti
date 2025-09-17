@@ -8,6 +8,7 @@ export class CoAP {
     enc(11,te('.well-known')); enc(11,te('coreconf')); enc(11,te('data'));
     if(uri && uri!=='/'){ const yp=uri.replace(/^\//,''); enc(11,te(yp)); }
     enc(17,new Uint8Array([60])); // Accept: application/yang-data+cbor
+    if(payload){ enc(12,new Uint8Array([60])); } // Content-Format for payload
     const msg=new Uint8Array(header.length+opts.length+(payload?payload.length+1:0));
     msg.set(header); msg.set(new Uint8Array(opts),header.length);
     if(payload){ msg[header.length+opts.length]=0xFF; msg.set(payload,header.length+opts.length+1); }
@@ -16,4 +17,3 @@ export class CoAP {
   }
   parseMessage(u8){ if(u8.length<4) return null; const code=u8[1], mid=(u8[2]<<8)|u8[3]; let i=4; while(i<u8.length && u8[i]!==0xFF){ const l=u8[i]&0x0F; i+=1+l; } let payload=null; if(i<u8.length && u8[i]===0xFF) payload=u8.slice(i+1); return { code:`${(code>>5)}.${(code&0x1F).toString().padStart(2,'0')}`, messageId:mid, payload } }
 }
-
