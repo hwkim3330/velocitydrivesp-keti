@@ -1,201 +1,23 @@
 <!DOCTYPE html>
-<html lang="ko" class="touch-mode">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>VelocityDRIVE‑SP Control (iPad)</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    :root{--brand:#007AFF;--brand2:#0A84FF;--ok:#34C759;--err:#FF3B30;--bg:#ffffff;--bg2:#F2F2F7;--line:#E5E5EA;--text:#111827;--muted:#6b7280;--r:16px;--r2:12px;--sh:0 8px 20px rgba(17,24,39,.06);--tapY:14px;--tapX:18px;--h:52px}
-    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg2);color:var(--text);height:100vh;overflow:hidden;-webkit-tap-highlight-color:transparent}
-    .hdr{position:sticky;top:0;z-index:10;padding:12px;border-bottom:1px solid var(--line);background:var(--bg2)}
-    .hdr-card{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
-    .brand{display:flex;align-items:center;gap:10px}.logo{height:32px;width:auto;object-fit:contain}.ttl{font-size:20px;font-weight:800}
-    .pill{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:8px 12px}
-    .dot{width:10px;height:10px;border-radius:50%;background:var(--muted)}.pill.on .dot{background:var(--ok)}
-    .btn{background:#fff;border:1px solid var(--line);padding:var(--tapY) var(--tapX);min-height:var(--h);border-radius:14px;cursor:pointer;box-shadow:0 2px 10px rgba(17,24,39,.05)}
-    .btn:hover{background:#f8f9fb;border-color:var(--brand)}.btn.p{background:var(--brand);border-color:var(--brand);color:#fff}.btn.d{background:var(--err);border-color:var(--err);color:#fff}
-    .stat{text-align:center}.sval{font-size:20px;font-weight:800;color:var(--brand)}.slab{font-size:12px;color:var(--muted)}
-    .wrap{display:flex;height:calc(100vh - 110px)}
-    .nav{width:320px;background:var(--bg2);border-right:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:12px}
-    .cap{font-weight:800;color:#8e8e93;padding:6px 8px}
-    .item{height:56px;padding:0 14px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
-    .item::after{content:'›';color:#8e8e93;font-size:18px}
-    .item.active{border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,122,255,.18)}
-    .detail{flex:1;padding:12px;overflow:auto}
-    .card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh);margin-bottom:16px}
-    .card-h{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800;background:#F9F9FB;border-radius:20px 20px 0 0}
-    .card-b{padding:16px 18px}
-    .inp{width:100%;padding:var(--tapY) var(--tapX);border:1px solid var(--line);border-radius:12px;min-height:var(--h)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-    .log{height:280px;overflow:auto;border:1px solid var(--line);border-radius:12px;font-family:ui-monospace,Menlo,monospace;background:#f8fafc;padding:10px}
-  </style>
-</head>
-<body>
-  <div class="hdr">
-    <div class="hdr-card">
-      <div class="brand"><img class="logo" src="assets/keti.png" alt="KETI"/><div class="ttl">VelocityDRIVE‑SP</div></div>
-      <div class="row">
-        <div class="pill" id="pill"><span class="dot" id="dot"></span><span id="ptext">Disconnected</span></div>
-        <button class="btn p" onclick="connectDevice()">Connect</button>
-        <button class="btn d" onclick="disconnectDevice()">Disconnect</button>
-        <button class="btn" onclick="fetchLatestCoreconf()">Fetch Latest</button>
-        <input type="file" id="sidFile" accept=".json,.js,.sid" style="display:none" onchange="onImportSidFile(event)">
-        <input type="file" id="coreconfDir" webkitdirectory directory multiple style="display:none" onchange="onImportCoreconfFolder(event)">
-        <input type="file" id="coreconfArchive" accept=".tgz,.tar,.tar.gz" style="display:none" onchange="onImportCoreconfArchive(event)">
-        <button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button>
-        <button class="btn" onclick="document.getElementById('coreconfArchive').click()">Import Archive</button>
-      </div>
-      <div class="row">
-        <div class="stat"><div class="sval" id="sMap">0</div><div class="slab">Mappings</div></div>
-        <div class="stat"><div class="sval" id="sMod">0</div><div class="slab">Modules</div></div>
-        <div class="stat"><div class="sval" id="sDev">OFF</div><div class="slab">Device</div></div>
-      </div>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="refresh" content="0; url=app/" />
+    <title>VelocityDRIVE‑SP</title>
+    <style>
+      html,body{height:100%}
+      body{margin:0;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#F2F2F7;color:#111827}
+      .card{background:#fff;border:1px solid #E5E5EA;border-radius:20px;box-shadow:0 8px 20px rgba(17,24,39,.06);padding:20px 24px;text-align:center}
+      .btn{margin-top:12px;display:inline-block;padding:10px 16px;border-radius:14px;border:1px solid #E5E5EA;background:#007AFF;color:#fff;text-decoration:none}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div style="font-weight:800;font-size:18px;margin-bottom:6px">VelocityDRIVE‑SP</div>
+      <div style="color:#6b7280">Loading iPad app…</div>
+      <a class="btn" href="app/">Open</a>
     </div>
-  </div>
-
-  <div class="wrap">
-    <aside class="nav">
-      <div class="cap">설정</div>
-      <button class="item active" data-panel="device">장치</button>
-      <button class="item" data-panel="coreconf">Coreconf</button>
-      <button class="item" data-panel="tsn">TSN</button>
-      <button class="item" data-panel="psfp">PSFP</button>
-      <button class="item" data-panel="config">구성</button>
-      <button class="item" data-panel="logs">로그</button>
-      <button class="item" data-panel="raw">Raw CoAP</button>
-      <div class="cap">YANG</div>
-      <input class="inp" id="yangSearch" placeholder="경로 검색..." onkeyup="searchYangPaths(this.value)"/>
-      <div id="yangTree" style="flex:1;overflow:auto;margin-top:8px"></div>
-    </aside>
-
-    <main class="detail">
-      <section id="p-device" class="card" style="display:block"><div class="card-h">장치 연결</div><div class="card-b">
-        <div class="row"><div class="pill" id="pill2"><span class="dot" id="dot2"></span><span id="ptext2">Disconnected</span></div><button class="btn p" onclick="connectDevice()">Connect</button><button class="btn d" onclick="disconnectDevice()">Disconnect</button></div>
-      </div></section>
-
-      <section id="p-coreconf" class="card" style="display:none"><div class="card-h">Coreconf</div><div class="card-b">
-        <div class="row"><button class="btn" onclick="fetchLatestCoreconf()">Fetch Latest</button><button class="btn" onclick="document.getElementById('coreconfArchive').click()">Import Archive</button><button class="btn" onclick="document.getElementById('coreconfDir').click()">Import Folder</button><button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button></div>
-        <div class="row" style="gap:18px;margin-top:10px"><div class="stat"><div class="sval" id="sMap2">0</div><div class="slab">Mappings</div></div><div class="stat"><div class="sval" id="sMod2">0</div><div class="slab">Modules</div></div></div>
-      </div></section>
-
-      <section id="p-config" class="card" style="display:none"><div class="card-h">구성</div><div class="card-b">
-        <div class="row" style="gap:12px"><input class="inp" id="configPath" placeholder="YANG 경로" readonly /><button class="btn p" onclick="getConfig()">Get</button><button class="btn p" onclick="setConfig()">Set</button></div>
-        <textarea class="inp" id="configData" style="margin-top:10px" placeholder='{"enabled": true}'></textarea>
-      </div></section>
-
-      <section id="p-tsn" class="card" style="display:none"><div class="card-h">TSN</div><div class="card-b">
-        <div class="row"><input class="inp" id="tsnIface" placeholder="Interface (e.g., eth0)" style="flex:2"><select class="inp" id="ifaceSelect" style="flex:2"><option value="">(Load interfaces)</option></select><button class="btn" onclick="loadInterfaces()">Load</button></div>
-        <div class="row" style="margin-top:8px;gap:8px">
-          <select class="inp" id="tsnPreset" style="flex:2"><option value="">(Preset 선택)</option></select>
-          <button class="btn" onclick="applyPresetToFields()">프리셋 적용</button>
-          <button class="btn p" onclick="applyPresetAll()">프리셋 즉시 적용</button>
-        </div>
-        <div class="grid" style="margin-top:12px">
-          <div class="card"><div class="card-h">TAS</div><div class="card-b"><input class="inp" id="tasCycleNs" placeholder="Cycle ns" value="1000000" style="margin-bottom:8px"><input class="inp" id="tasBaseTimeNs" placeholder="Base time ns (0=now)" value="0" style="margin-bottom:8px"><input class="inp" id="tasGates" placeholder="Gate masks e.g., FF,FF,FF" style="margin-bottom:8px"><button class="btn p" onclick="applyTAS()">Apply TAS</button>
-              <div style="margin-top:10px;font-weight:800;color:#6b7280">Control List (optional)</div>
-              <div class="row" style="margin-top:6px">
-                <input class="inp" id="tasEntryIndex" placeholder="index" style="max-width:110px">
-                <input class="inp" id="tasEntryState" placeholder="gate-state-value (hex)" style="max-width:220px">
-                <input class="inp" id="tasEntryTime" placeholder="time-interval-value (ns)" style="max-width:220px">
-                <input class="inp" id="tasEntryOp" placeholder="operation-name (optional)" style="max-width:240px">
-                <button class="btn" onclick="addTasEntry()">Add</button>
-              </div>
-              <div id="tasEntries" class="log" style="height:160px;margin-top:8px"></div>
-            </div></div>
-          <div class="card"><div class="card-h">CBS</div><div class="card-b"><input class="inp" id="cbsClass" placeholder="Class (0-7)" value="3" style="margin-bottom:8px"><input class="inp" id="cbsIdleSlope" placeholder="Idle Slope (kbps)" style="margin-bottom:8px"><input class="inp" id="cbsSendSlope" placeholder="Send Slope (kbps)" style="margin-bottom:8px"><button class="btn p" onclick="applyCBS()">Apply CBS</button></div></div>
-          <div class="card"><div class="card-h">PTP</div><div class="card-b"><input class="inp" id="ptpInstance" placeholder="Instance" value="0" style="margin-bottom:8px"><input class="inp" id="ptpDomain" placeholder="Domain" value="0" style="margin-bottom:8px"><select class="inp" id="ptpTwoStep" style="margin-bottom:8px"><option>true</option><option>false</option></select><button class="btn p" onclick="applyPTP()">Apply PTP</button></div></div>
-        </div>
-      </div></section>
-
-      <section id="p-psfp" class="card" style="display:none"><div class="card-h">PSFP</div><div class="card-b">
-        <div class="grid">
-          <div class="card"><div class="card-h">Flow Meter</div><div class="card-b"><input class="inp" id="psfpFmId" placeholder="ID" value="1" style="margin-bottom:8px"><input class="inp" id="psfpCir" placeholder="CIR (kbps)" style="margin-bottom:8px"><input class="inp" id="psfpCbs" placeholder="CBS (bytes)" style="margin-bottom:8px"><input class="inp" id="psfpEir" placeholder="EIR (kbps)" style="margin-bottom:8px"><input class="inp" id="psfpEbs" placeholder="EBS (bytes)" style="margin-bottom:8px"><select class="inp" id="psfpDropYellow" style="margin-bottom:8px"><option>false</option><option>true</option></select><button class="btn p" onclick="applyPSFPFlowMeter()">Apply</button></div></div>
-          <div class="card"><div class="card-h">Stream Filter</div><div class="card-b"><input class="inp" id="psfpSfId" placeholder="Filter ID" value="1" style="margin-bottom:8px"><input class="inp" id="psfpStreamHandle" placeholder="Stream Handle" style="margin-bottom:8px"><input class="inp" id="psfpPriority" placeholder="Priority (0-7)" value="3" style="margin-bottom:8px"><input class="inp" id="psfpMaxSdu" placeholder="Max SDU (bytes)" value="1500" style="margin-bottom:8px"><select class="inp" id="psfpOversizeEnable" style="margin-bottom:8px"><option>false</option><option>true</option></select><select class="inp" id="psfpFmEnable" style="margin-bottom:8px"><option>false</option><option>true</option></select><input class="inp" id="psfpFmRef" placeholder="Flow Meter Ref" style="margin-bottom:8px"><input class="inp" id="psfpSgRef" placeholder="Stream Gate Ref" style="margin-bottom:8px"><button class="btn p" onclick="applyPSFPStreamFilter()">Apply</button></div></div>
-          <div class="card"><div class="card-h">Stream Gate</div><div class="card-b"><input class="inp" id="psfpSgId" placeholder="Gate ID" value="1" style="margin-bottom:8px"><div class="row"><input class="inp" id="psfpSgBaseSec" placeholder="Base sec" value="0"><input class="inp" id="psfpSgBaseNs" placeholder="Base ns" value="0"></div><div class="row" style="margin-top:8px"><input class="inp" id="psfpSgCycleNum" placeholder="Cycle numerator" value="1"><input class="inp" id="psfpSgCycleDen" placeholder="Cycle denominator" value="1"></div><input class="inp" id="psfpSgStates" placeholder="Admin gate states (hex)" style="margin-top:8px"><button class="btn p" onclick="applyPSFPStreamGate()">Apply</button></div></div>
-        </div>
-      </div></section>
-
-      <section id="p-logs" class="card" style="display:none"><div class="card-h">로그</div><div class="card-b"><div class="row" style="margin-bottom:8px"><button class="btn" onclick="clearLog()">Clear</button><button class="btn" onclick="exportLog()">Export</button></div><div class="log" id="logOutput"></div></div></section>
-      <section id="p-raw" class="card" style="display:none"><div class="card-h">Raw CoAP</div><div class="card-b"><div class="grid"><select class="inp" id="coapMethod"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select><input class="inp" id="coapUri" placeholder="/ietf-interfaces:interfaces"></div><textarea class="inp" id="coapPayload" placeholder="CBOR Hex (optional)" style="margin-top:8px"></textarea><button class="btn p" style="margin-top:8px" onclick="sendRawCoap()">Send</button></div></section>
-    </main>
-  </div>
-
-  <script src="js/storage.js"></script>
-  <script src="js/sid-mapping.js"></script>
-  <script src="js/yang-tree-builder.js"></script>
-  <script src="js/tsn-presets.js"></script>
-  <script>
-  // ===== State & Nav =====
-  let port=null, reader=null, writer=null, isConnected=false, selectedPath='';
-  document.addEventListener('click', (e)=>{ const b=e.target.closest('.item'); if(!b) return; document.querySelectorAll('.item').forEach(x=>x.classList.toggle('active', x===b)); ['device','coreconf','tsn','psfp','config','logs','raw'].forEach(k=>{ const el=document.getElementById('p-'+k); if(el) el.style.display=(b.dataset.panel===k)?'block':'none'; }); }, {passive:true});
-
-  // ===== Protocols =====
-  class MUP1Protocol{createPingFrame(){return '>p<<8553\n'}createCoapInitFrame(){return '>c\n'}createCoapDataFrame(m){const hex=Array.from(m).map(b=>b.toString(16).padStart(2,'0')).join('');let cs=0;for(let i=0;i<m.length;i++)cs^=m[i];return `>d${hex}<<${cs.toString(16).padStart(4,'0')}\n`}parseFrame(d){if(d.startsWith('>P'))return{type:'ping-response',data:d.replace(/^>P/,'').replace(/<<.*$/,'').trim()};if(d.startsWith('>C'))return{type:'coap-init-response'};if(d.startsWith('>D')){const m=d.match(/>D([0-9a-fA-F]+)<</);if(m){const hex=m[1];return{type:'coap-data-response',data:new Uint8Array(hex.match(/.{2}/g).map(h=>parseInt(h,16)))}}}return{type:'unknown',data:d}}}
-  class CoapProtocol{constructor(){this.messageId=1}buildMessage(method,uri,payload=null){this._lastOptionNumber=0;const code={GET:0x01,POST:0x02,PUT:0x03,DELETE:0x04}[method]||0x01;const header=new Uint8Array([0x40,code,(this.messageId>>8)&0xFF,this.messageId&0xFF]);this.messageId++;const opts=[];const add=(n,v)=>{const d=n-(this._lastOptionNumber||0),l=v.length;let h=0,ex=[];if(d<13)h|=(d<<4);else if(d<269){h|=(13<<4);ex.push(d-13)}else{h|=(14<<4);ex.push((d-269)>>8,(d-269)&0xFF)}if(l<13)h|=l;else if(l<269){h|=13;ex.push(l-13)}else{h|=14;ex.push((l-269)>>8,(l-269)&0xFF)}opts.push(h,...ex,...v);this._lastOptionNumber=n};
-    add(11,new TextEncoder().encode('.well-known'));add(11,new TextEncoder().encode('coreconf'));add(11,new TextEncoder().encode('data'));
-    if(uri&&uri!=='/'){const yp=uri.replace(/^\//,'');if(window.yangToSidMap&&window.yangToSidMap[yp]){const sid=new TextEncoder().encode(String(window.yangToSidMap[yp]));add(11,sid)}else{add(11,new TextEncoder().encode(yp))}}
-    add(17,new Uint8Array([60]));let msg=new Uint8Array(header.length+opts.length+(payload?payload.length+1:0));msg.set(header);msg.set(new Uint8Array(opts),header.length);if(payload){msg[header.length+opts.length]=0xFF;msg.set(payload,header.length+opts.length+1)}return msg}
-  parseMessage(d){if(d.length<4)return null;const code=d[1],mid=(d[2]<<8)|d[3];let i=4;while(i<d.length&&d[i]!==0xFF){const l=d[i]&0x0F;i+=1+l}let p=null;if(i<d.length&&d[i]===0xFF)p=d.slice(i+1);return{code:`${(code>>5)}.${(code&0x1F).toString().padStart(2,'0')}`,messageId:mid,payload:p}}}
-  class CborCodec{encode(o){const r=[];this.e(o,r);return new Uint8Array(r)}e(v,r){if(v==null)r.push(0xF6);else if(typeof v==='boolean')r.push(v?0xF5:0xF4);else if(typeof v==='number')this.n(v,r);else if(typeof v==='string')this.s(v,r);else if(v instanceof Uint8Array)this.b(v,r);else if(Array.isArray(v))this.a(v,r);else if(typeof v==='object')this.o(v,r);else r.push(0xF6)}n(n,r){if(n>=0){if(n<24)r.push(n);else if(n<256)r.push(0x18,n);else if(n<65536)r.push(0x19,(n>>8)&0xFF,n&0xFF);else r.push(0x1A,(n>>24)&0xFF,(n>>16)&0xFF,(n>>8)&0xFF,n&0xFF)}else{const m=-1-n;if(m<24)r.push(0x20|m);else if(m<256)r.push(0x38,m);else if(m<65536)r.push(0x39,(m>>8)&0xFF,m&0xFF);else r.push(0x3A,(m>>24)&0xFF,(m>>16)&0xFF,(m>>8)&0xFF,m&0xFF)}}s(s,r){const e=new TextEncoder().encode(s);this.h(r,3,e.length);r.push(...e)}b(b,r){this.h(r,2,b.length);r.push(...b)}a(a,r){this.h(r,4,a.length);a.forEach(v=>this.e(v,r))}o(o,r){const k=Object.keys(o);this.h(r,5,k.length);for(const key of k){this.s(String(key),r);this.e(o[key],r)}}h(r,t,l){if(l<24)r.push((t<<5)|l);else if(l<256)r.push((t<<5)|24,l);else if(l<65536)r.push((t<<5)|25,(l>>8)&0xFF,l&0xFF);else r.push((t<<5)|26,(l>>24)&0xFF,(l>>16)&0xFF,(l>>8)&0xFF,l&0xFF)}}
-
-  const mup1=new MUP1Protocol(); const coap=new CoapProtocol(); const cbor=new CborCodec(); let pendingRequests=new Map(), coapModeActive=false;
-  async function connectDevice(){try{port=await navigator.serial.requestPort();await port.open({baudRate:115200});writer=port.writable.getWriter();reader=port.readable.getReader();isConnected=true;log('INFO','CONNECT',0,0,'Serial connected');readLoop()}catch(e){alert('Connect failed: '+e.message)}}
-  async function disconnectDevice(){try{isConnected=false;reader&&reader.releaseLock();writer&&writer.releaseLock();await port.close();log('INFO','DISCONNECT',0,0,'Serial disconnected')}catch(e){}}
-  async function readLoop(){const dec=new TextDecoder();let buf='';while(isConnected&&reader){try{const {value,done}=await reader.read();if(done)break;const t=dec.decode(value);buf+=t;while(buf.includes('\n')){const i=buf.indexOf('\n');const line=buf.slice(0,i);buf=buf.slice(i+1);await handleReceive(new TextEncoder().encode(line+'\n'))}}catch(e){break}}}
-  async function handleReceive(d){if(coapModeActive){try{const t=new TextDecoder().decode(d);const r=mup1.parseFrame(t);if(r.type==='coap-data-response'){const resp=coap.parseMessage(r.data);if(resp){const req=pendingRequests.get(resp.messageId);if(req){clearTimeout(req.timeout);pendingRequests.delete(resp.messageId);log('RECV','COAP',resp.messageId,r.data.length,resp.code);req.resolve(resp)}}}else{log('RECV','MUP1',null,t.length,r.type)}}catch(e){}}else{const t=new TextDecoder().decode(d);const f=mup1.parseFrame(t);if(f.type==='ping-response'){log('RECV','PING',null,d.length,f.data)}else if(f.type==='coap-init-response'){log('RECV','COAP_INIT',null,d.length,'ACK')}else{log('RECV','DATA',null,d.length,t.trim())}}}
-  async function enterCoapMode(){if(coapModeActive||!writer)return;await writer.write(new TextEncoder().encode(mup1.createCoapInitFrame()));coapModeActive=true}
-  async function sendCoapRequest(method,uri,payload=null){await enterCoapMode();const msg=coap.buildMessage(method,uri,payload);const frame=mup1.createCoapDataFrame(msg);await writer.write(new TextEncoder().encode(frame));const id=coap.messageId-1;log('SEND',method,id,frame.length,`${method} ${uri}`);return new Promise((res,rej)=>{const to=setTimeout(()=>{pendingRequests.delete(id);rej(new Error('timeout'))},10000);pendingRequests.set(id,{resolve:res,reject:rej,timeout:to})})}
-
-  function log(dir,type,id,len,data){const out=document.getElementById('logOutput');if(!out)return;const t=new Date().toLocaleTimeString();const div=document.createElement('div');div.textContent=`${t} ${dir} ${type} ${id??''} (${len}B) ${data??''}`;out.appendChild(div);out.scrollTop=out.scrollHeight}
-  function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
-  function validInt(v){return /^-?\d+$/.test(String(v).trim())}
-  function validHexMask(v){return /^[0-9a-fA-F]{2}$/.test(String(v).trim())}
-
-  // YANG maps
-  function yangToSid(data){if(!data||typeof data!=='object')return data;const res={};function conv(path,val){if(window.yangToSidMap&&window.yangToSidMap[path])return{[window.yangToSidMap[path]]:val};return{[path]:val}}for(const [k,v] of Object.entries(data)){if(typeof v==='object'&&v&&!Array.isArray(v)){Object.assign(res,yangToSid(v))}else{Object.assign(res,conv(k,v))}}return res}
-  function mapSidsToYang(data){if(!data||typeof data!=='object')return data;const res={};for(const [k,v] of Object.entries(data)){const p=window.yangSidMap?.[k]||k;res[p]=typeof v==='object'?mapSidsToYang(v):v}return res}
-
-  // TSN/PSFP
-  async function loadInterfaces(){if(!isConnected)return alert('Connect first');const r=await sendCoapRequest('GET','/ietf-interfaces:interfaces');if(!r.payload)return;const dec=mapSidsToYang(cbor.decode(r.payload));const names=[];for(const [k,v] of Object.entries(dec)){if(typeof v==='string'&&k.endsWith('/ietf-interfaces:interfaces/interface/name'))names.push(v)}const sel=document.getElementById('ifaceSelect');sel.innerHTML='';names.sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)});sel.onchange=()=>{if(sel.value)document.getElementById('tsnIface').value=sel.value}}
-  async function applyTAS(){const ifn=document.getElementById('tsnIface').value.trim();if(!ifn)return alert('iface');const cyc=parseInt(document.getElementById('tasCycleNs').value||'0',10);const base=parseInt(document.getElementById('tasBaseTimeNs').value||'0',10);const path=`/ieee802-dot1q-sched:interfaces/interface[name='${ifn}']/gate-parameters`;const yang={}; if(window.tasList&&window.tasList.length){yang[path]={'admin-base-time':base,'admin-cycle-time':cyc,'admin-control-list':{'gate-control-entry': window.tasList.map(e=>({...e}))}}} else {const gates=((document.getElementById('tasGates').value||'').trim()).split(',').map(s=>s.trim()).filter(Boolean); yang[path]={'admin-base-time':base,'admin-cycle-time':cyc,'admin-control-list':gates.map((m,i)=>({'index':i,'gate-states':m}))};} const payload=cbor.encode(yangToSid(yang));const resp=await sendCoapRequest('PUT',path,payload);toast('TAS '+resp.code)}
-  // TAS control list builder
-  window.tasList=[];
-  function renderTasList(){const el=document.getElementById('tasEntries');if(!el)return;el.innerHTML=''; if(!window.tasList.length){el.textContent='(no entries)'; return;} window.tasList.forEach((e,ix)=>{const row=document.createElement('div');row.textContent=`#${e.index} state=${e['gate-state-value']} time=${e['time-interval-value']} op=${e['operation-name']||''}`;const btn=document.createElement('button');btn.className='btn';btn.style.marginLeft='8px';btn.textContent='Remove';btn.onclick=()=>{window.tasList.splice(ix,1);renderTasList()};const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.alignItems='center';wrap.style.gap='8px';wrap.appendChild(row);wrap.appendChild(btn);el.appendChild(wrap)});}
-  function addTasEntry(){const idx=document.getElementById('tasEntryIndex').value.trim(), st=document.getElementById('tasEntryState').value.trim(), ti=document.getElementById('tasEntryTime').value.trim(), op=document.getElementById('tasEntryOp').value.trim(); if(!validInt(idx)||!validHexMask(st)||!validInt(ti)){toast('index int, state hex(2), time int(ns)'); return;} window.tasList.push({'index':parseInt(idx,10),'gate-state-value':st,'time-interval-value':parseInt(ti,10),...(op?{'operation-name':op}:{})}); renderTasList();}
-  async function applyCBS(){const ifn=document.getElementById('tsnIface').value.trim();if(!ifn)return alert('iface');const cls=parseInt(document.getElementById('cbsClass').value||'0',10);const idle=parseInt(document.getElementById('cbsIdleSlope').value||'0',10);const send=parseInt(document.getElementById('cbsSendSlope').value||'0',10);const path=`/ieee802-dot1q-sched:interfaces/interface[name='${ifn}']/scheduler`;const yang={};yang[path]={'traffic-class-table':[{'traffic-class':cls,'idle-slope':idle,'send-slope':send}]};const resp=await sendCoapRequest('PUT',path,cbor.encode(yangToSid(yang)));alert('CBS '+resp.code)}
-  async function applyPTP(){const inst=(document.getElementById('ptpInstance').value||'0').trim();const dom=parseInt(document.getElementById('ptpDomain').value||'0',10);const two=document.getElementById('ptpTwoStep').value==='true';const path=`/ieee1588-ptp:ptp/instance[instance-index='${inst}']`;const yang={};yang[path]={'domain-number':dom,'two-step-flag':two};const resp=await sendCoapRequest('PUT',path,cbor.encode(yangToSid(yang)));alert('PTP '+resp.code)}
-  function psfpBase(){return '/ieee802-dot1q-bridge:bridges/bridge/component/ieee802-dot1q-psfp-bridge:'}
-  async function applyPSFPFlowMeter(){const id=parseInt(ps('psfpFmId'),10),cir=parseInt(ps('psfpCir')||'0',10),cbs=parseInt(ps('psfpCbs')||'0',10),eir=parseInt(ps('psfpEir')||'0',10),ebs=parseInt(ps('psfpEbs')||'0',10),drop=document.getElementById('psfpDropYellow').value==='true';const base=psfpBase()+'flow-meters/flow-meter-instance-table';const y={};y[base+'/flow-meter-instance-id']=id;if(!isNaN(cir))y[base+'/committed-information-rate']=cir;if(!isNaN(cbs))y[base+'/committed-burst-size']=cbs;if(!isNaN(eir))y[base+'/excess-information-rate']=eir;if(!isNaN(ebs))y[base+'/excess-burst-size']=ebs;y[base+'/drop-on-yellow']=drop;const r=await sendCoapRequest('PUT',base,cbor.encode(yangToSid(y)));alert('FlowMeter '+r.code)}
-  async function applyPSFPStreamFilter(){const id=parseInt(ps('psfpSfId'),10),handle=parseInt(ps('psfpStreamHandle')||'0',10),prio=parseInt(ps('psfpPriority')||'0',10),max=parseInt(ps('psfpMaxSdu')||'0',10),ov=document.getElementById('psfpOversizeEnable').value==='true',fmEn=document.getElementById('psfpFmEnable').value==='true',fmRef=parseInt(ps('psfpFmRef')||'0',10),sgRef=parseInt(ps('psfpSgRef')||'0',10);const base=psfpBase()+'stream-filters/stream-filter-instance-table';const y={};y[base+'/stream-filter-instance-id']=id;if(!isNaN(handle))y[base+'/stream-handle-spec/stream-handle/stream-handle']=handle;if(!isNaN(prio))y[base+'/priority-spec']=prio;if(!isNaN(max))y[base+'/max-sdu-size']=max;y[base+'/stream-blocked-due-to-oversize-frame-enabled']=ov;y[base+'/flow-meter-enable']=fmEn;if(!isNaN(fmRef))y[base+'/flow-meter-ref']=fmRef;if(!isNaN(sgRef))y[base+'/stream-gate-ref']=sgRef;const r=await sendCoapRequest('PUT',base,cbor.encode(yangToSid(y)));alert('StreamFilter '+r.code)}
-  async function applyPSFPStreamGate(){const id=parseInt(ps('psfpSgId'),10),sec=parseInt(ps('psfpSgBaseSec')||'0',10),ns=parseInt(ps('psfpSgBaseNs')||'0',10),num=parseInt(ps('psfpSgCycleNum')||'1',10),den=parseInt(ps('psfpSgCycleDen')||'1',10),st=(ps('psfpSgStates')||'').trim();const base=psfpBase()+'stream-gates/stream-gate-instance-table';const y={};y[base+'/stream-gate-instance-id']=id;if(!isNaN(sec))y[base+'/admin-base-time/seconds']=sec;if(!isNaN(ns))y[base+'/admin-base-time/nanoseconds']=ns;if(!isNaN(num))y[base+'/admin-cycle-time/numerator']=num;if(!isNaN(den))y[base+'/admin-cycle-time/denominator']=den;if(st)y[base+'/admin-gate-states']=st;const r=await sendCoapRequest('PUT',base,cbor.encode(yangToSid(y)));alert('StreamGate '+r.code)}
-  function ps(id){return document.getElementById(id).value}
-
-  // YANG tree
-  function searchYangPaths(q){/* optional: can implement filtering UI */}
-  window.selectYangPath=(path,sid)=>{selectedPath=path;const i=document.getElementById('configPath');if(i)i.value=path}
-  
-  // Coreconf loading
-  function buildProxiedUrl(url, proxyBase){if(!proxyBase)return url;const b=String(proxyBase).trim();if(/\/$/.test(b)&&b.includes('corsproxy.io'))return `${b}${encodeURIComponent(url)}`;if(/\/(fetch|proxy)$/.test(b))return `${b}?url=${encodeURIComponent(url)}`;return `${b.replace(/\/$/,'')}/fetch?url=${encodeURIComponent(url)}`}
-  async function extractSidFromArchive(bytes,name){const low=(name||'').toLowerCase();let tar=bytes;if(low.endsWith('.tgz')||low.endsWith('.tar.gz')||(bytes[0]===0x1f&&bytes[1]===0x8b)){if(typeof DecompressionStream==='undefined')throw new Error('No gzip support');const ds=new DecompressionStream('gzip');const gun=new Uint8Array(await new Response(new Response(bytes).body.pipeThrough(ds)).arrayBuffer());tar=gun}const files=parseTar(tar), mapping={}, stats={};for(const f of files){if(f.name.endsWith('.sid')){try{const j=JSON.parse(new TextDecoder().decode(f.data));const mn=j['module-name']||'unknown';let c=0;(j.items||[]).forEach(it=>{if(it.namespace==='data'&&it.sid&&it.identifier){mapping[it.sid]=it.identifier;c++}});stats[mn]=c}catch{}}}return {mapping,moduleStats:stats}}
-  function parseTar(u8){const out=[],B=512;let i=0;while(i+B<=u8.length){const h=u8.subarray(i,i+B);if(h.every(b=>b===0))break;const name=new TextDecoder().decode(h.subarray(0,100)).replace(/\0.*$/,'');const size=parseInt(new TextDecoder().decode(h.subarray(124,136)).replace(/\0.*$/,'').trim(),8)||0;const st=i+B,en=st+size;out.push({name,data:u8.subarray(st,en)});i=en+((B-(size%B||B))%B)}return out}
-  async function onImportCoreconfArchive(e){const f=e.target.files?.[0];if(!f)return;const map=await extractSidFromArchive(new Uint8Array(await f.arrayBuffer()),f.name);applySidMap(map)}
-  function applySidMap(map){if(!map||!map.mapping)return alert('No mapping');window.yangSidMap=map.mapping;window.moduleStats=map.moduleStats;window.SIDStorage?.save&&window.SIDStorage.save(map.mapping);const m=Object.keys(map.mapping).length;byId('sMap').textContent=m;byId('sMap2').textContent=m;const ms=map.moduleStats?Object.keys(map.moduleStats).filter(k=>map.moduleStats[k]>0).length:0;byId('sMod').textContent=ms;byId('sMod2').textContent=ms;renderYangTree()}
-  async function fetchLatestCoreconf(){try{const cfg=await (await fetch('config.json',{cache:'no-store'})).json();const src=(cfg.coreconfSources||[]).find(s=> (s.type==='tgzUrl'||s.type==='tarUrl')&&s.url);let url=src?.url|| (prompt('Coreconf archive URL (.tgz/.tar)')||'');if(!url)return;const fetchUrl=buildProxiedUrl(url,cfg.corsProxy||src?.proxy||'');const r=await fetch(fetchUrl,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const map=await extractSidFromArchive(new Uint8Array(await r.arrayBuffer()),url.toLowerCase());applySidMap(map);alert('Applied '+Object.keys(map.mapping).length+' mappings')}catch(e){alert('Fetch failed: '+e.message)}}
-  function renderYangTree(){if(window.yangSidMap&&window.YangTreeBuilder){const b=new YangTreeBuilder(window.yangSidMap);const el=document.getElementById('yangTree');if(el){el.innerHTML=''; b.renderTree('yangTree')}}byId('sMap').textContent=Object.keys(window.yangSidMap||{}).length}
-  function byId(id){return document.getElementById(id)}
-
-  // INIT
-  document.addEventListener('DOMContentLoaded',()=>{
-    // load cached sid map
-    try{const s=window.SIDStorage?.load&&window.SIDStorage.load(); if(s&&Object.keys(s).length){window.yangSidMap=s}}catch{}
-    renderYangTree(); setInterval(()=>{const on=!!isConnected;byId('sDev').textContent=on?'ON':'OFF';const p=byId('pill'),d=byId('dot'),t=byId('ptext');const p2=byId('pill2'),d2=byId('dot2'),t2=byId('ptext2');if(p){p.classList.toggle('on',on); if(d) d.style.background=on?'var(--ok)':'var(--muted)'; if(t) t.textContent=on?'Connected':'Disconnected'}if(p2){p2.classList.toggle('on',on); if(d2) d2.style.background=on?'var(--ok)':'var(--muted)'; if(t2) t2.textContent=on?'Connected':'Disconnected'}const m=Object.keys(window.yangSidMap||{}).length; const m1=byId('sMap'); if(m1) m1.textContent=m; const m2=byId('sMap2'); if(m2) m2.textContent=m; const ms=window.moduleStats?Object.keys(window.moduleStats).filter(k=>window.moduleStats[k]>0).length:0; const mm1=byId('sMod'); if(mm1) mm1.textContent=ms; const mm2=byId('sMod2'); if(mm2) mm2.textContent=ms; },500);
-    // populate presets
-    try{ const sel=document.getElementById('tsnPreset'); if (sel && window.TSNPRESETS){ Object.keys(window.TSNPRESETS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);}); } }catch{}
-  });
-  </script>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-</body>
-</html>
+    <script>location.replace('app/');</script>
+  </body>
+  </html>
