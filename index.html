@@ -2035,6 +2035,15 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => console.warn('Auto coreconf load failed:', err));
   }
+
+  // Staleness check: if cached mapping older than 7 days, refresh in background
+  try {
+    const last = parseInt(localStorage.getItem('velocitydrivesp_sid_last_updated') || '0', 10);
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    if (last > 0 && Date.now() - last > weekMs) {
+      autoLoadCoreconf().catch(() => {});
+    }
+  } catch {}
   
   // Initialize YANG Tree Browser
   if (window.yangSidMap && window.YangTreeBuilder) {
@@ -2196,6 +2205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.yangSidMap = mapping;
         window.moduleStats = moduleStats;
         window.SIDStorage?.save && window.SIDStorage.save(mapping);
+        try { localStorage.setItem('velocitydrivesp_sid_last_updated', String(Date.now())); } catch {}
         if (window.YangTreeBuilder) {
           const treeBuilder = new YangTreeBuilder(window.yangSidMap);
           treeBuilder.renderTree('yangTree');
