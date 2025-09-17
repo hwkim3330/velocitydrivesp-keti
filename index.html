@@ -710,6 +710,105 @@ select.form-input {
                   <button class="btn btn-primary" onclick="applyPTP()">Apply PTP</button>
                 </div>
               </div>
+
+              <div class="panel">
+                <div class="panel-header">🛡️ PSFP – Flow Meter</div>
+                <div class="panel-content">
+                  <div class="form-group">
+                    <label class="form-label">Flow Meter ID</label>
+                    <input class="form-input" id="psfpFmId" placeholder="1" value="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Committed Information Rate (kbps)</label>
+                    <input class="form-input" id="psfpCir" placeholder="100000">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Committed Burst Size (bytes)</label>
+                    <input class="form-input" id="psfpCbs" placeholder="8192">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Excess Information Rate (kbps)</label>
+                    <input class="form-input" id="psfpEir" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Excess Burst Size (bytes)</label>
+                    <input class="form-input" id="psfpEbs" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Drop on Yellow</label>
+                    <select class="form-input" id="psfpDropYellow"><option value="false">false</option><option value="true">true</option></select>
+                  </div>
+                  <button class="btn btn-primary" onclick="applyPSFPFlowMeter()">Apply Flow Meter</button>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-header">🧩 PSFP – Stream Filter</div>
+                <div class="panel-content">
+                  <div class="form-group">
+                    <label class="form-label">Stream Filter ID</label>
+                    <input class="form-input" id="psfpSfId" placeholder="1" value="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Stream Handle</label>
+                    <input class="form-input" id="psfpStreamHandle" placeholder="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Priority (0-7)</label>
+                    <input class="form-input" id="psfpPriority" placeholder="3" value="3">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Max SDU Size (bytes)</label>
+                    <input class="form-input" id="psfpMaxSdu" placeholder="1500" value="1500">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Oversize Block Enable</label>
+                    <select class="form-input" id="psfpOversizeEnable"><option value="false">false</option><option value="true">true</option></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Flow Meter Enable</label>
+                    <select class="form-input" id="psfpFmEnable"><option value="false">false</option><option value="true">true</option></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Flow Meter Ref (ID)</label>
+                    <input class="form-input" id="psfpFmRef" placeholder="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Stream Gate Ref (ID)</label>
+                    <input class="form-input" id="psfpSgRef" placeholder="1">
+                  </div>
+                  <button class="btn btn-primary" onclick="applyPSFPStreamFilter()">Apply Stream Filter</button>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-header">🚪 PSFP – Stream Gate</div>
+                <div class="panel-content">
+                  <div class="form-group">
+                    <label class="form-label">Stream Gate ID</label>
+                    <input class="form-input" id="psfpSgId" placeholder="1" value="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Admin Base Time (sec/ns)</label>
+                    <div style="display:flex; gap:0.5rem;">
+                      <input class="form-input" id="psfpSgBaseSec" placeholder="0" value="0" style="flex:1;">
+                      <input class="form-input" id="psfpSgBaseNs" placeholder="0" value="0" style="flex:1;">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Cycle Time (num/den)</label>
+                    <div style="display:flex; gap:0.5rem;">
+                      <input class="form-input" id="psfpSgCycleNum" placeholder="1" value="1" style="flex:1;">
+                      <input class="form-input" id="psfpSgCycleDen" placeholder="1" value="1" style="flex:1;">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Admin Gate States (hex mask)</label>
+                    <input class="form-input" id="psfpSgStates" placeholder="FF">
+                  </div>
+                  <button class="btn btn-primary" onclick="applyPSFPStreamGate()">Apply Stream Gate</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2221,6 +2320,96 @@ document.addEventListener('DOMContentLoaded', () => {
       location.reload();
     } catch (e) {
       location.reload();
+    }
+  };
+
+  // -------- PSFP Apply Handlers --------
+  function psfpBase() {
+    return '/ieee802-dot1q-bridge:bridges/bridge/component/ieee802-dot1q-psfp-bridge:';
+  }
+
+  window.applyPSFPFlowMeter = async () => {
+    try {
+      const id = parseInt(document.getElementById('psfpFmId').value || '0', 10);
+      const cir = parseInt(document.getElementById('psfpCir').value || '0', 10);
+      const cbs = parseInt(document.getElementById('psfpCbs').value || '0', 10);
+      const eir = parseInt(document.getElementById('psfpEir').value || '0', 10);
+      const ebs = parseInt(document.getElementById('psfpEbs').value || '0', 10);
+      const dropY = document.getElementById('psfpDropYellow').value === 'true';
+
+      const base = psfpBase() + 'flow-meters/flow-meter-instance-table';
+      const yang = {};
+      yang[base + '/flow-meter-instance-id'] = id;
+      if (!isNaN(cir)) yang[base + '/committed-information-rate'] = cir;
+      if (!isNaN(cbs)) yang[base + '/committed-burst-size'] = cbs;
+      if (!isNaN(eir)) yang[base + '/excess-information-rate'] = eir;
+      if (!isNaN(ebs)) yang[base + '/excess-burst-size'] = ebs;
+      yang[base + '/drop-on-yellow'] = dropY;
+
+      const sidObj = yangToSid(yang);
+      const payload = cbor.encode(sidObj);
+      const resp = await sendCoapRequest('PUT', base, payload);
+      alert(`Flow meter updated (code ${resp.code})`);
+    } catch (e) {
+      alert('Failed to apply Flow Meter: ' + e.message);
+    }
+  };
+
+  window.applyPSFPStreamFilter = async () => {
+    try {
+      const id = parseInt(document.getElementById('psfpSfId').value || '0', 10);
+      const handle = parseInt(document.getElementById('psfpStreamHandle').value || '0', 10);
+      const prio = parseInt(document.getElementById('psfpPriority').value || '0', 10);
+      const maxsdu = parseInt(document.getElementById('psfpMaxSdu').value || '0', 10);
+      const oversz = document.getElementById('psfpOversizeEnable').value === 'true';
+      const fmEn = document.getElementById('psfpFmEnable').value === 'true';
+      const fmRef = parseInt(document.getElementById('psfpFmRef').value || '0', 10);
+      const sgRef = parseInt(document.getElementById('psfpSgRef').value || '0', 10);
+
+      const base = psfpBase() + 'stream-filters/stream-filter-instance-table';
+      const yang = {};
+      yang[base + '/stream-filter-instance-id'] = id;
+      if (!isNaN(handle)) yang[base + '/stream-handle-spec/stream-handle/stream-handle'] = handle;
+      if (!isNaN(prio)) yang[base + '/priority-spec'] = prio;
+      if (!isNaN(maxsdu)) yang[base + '/max-sdu-size'] = maxsdu;
+      yang[base + '/stream-blocked-due-to-oversize-frame-enabled'] = oversz;
+      yang[base + '/flow-meter-enable'] = fmEn;
+      if (!isNaN(fmRef)) yang[base + '/flow-meter-ref'] = fmRef;
+      if (!isNaN(sgRef)) yang[base + '/stream-gate-ref'] = sgRef;
+
+      const sidObj = yangToSid(yang);
+      const payload = cbor.encode(sidObj);
+      const resp = await sendCoapRequest('PUT', base, payload);
+      alert(`Stream filter updated (code ${resp.code})`);
+    } catch (e) {
+      alert('Failed to apply Stream Filter: ' + e.message);
+    }
+  };
+
+  window.applyPSFPStreamGate = async () => {
+    try {
+      const id = parseInt(document.getElementById('psfpSgId').value || '0', 10);
+      const sec = parseInt(document.getElementById('psfpSgBaseSec').value || '0', 10);
+      const ns = parseInt(document.getElementById('psfpSgBaseNs').value || '0', 10);
+      const num = parseInt(document.getElementById('psfpSgCycleNum').value || '1', 10);
+      const den = parseInt(document.getElementById('psfpSgCycleDen').value || '1', 10);
+      const states = (document.getElementById('psfpSgStates').value || '').trim();
+
+      const base = psfpBase() + 'stream-gates/stream-gate-instance-table';
+      const yang = {};
+      yang[base + '/stream-gate-instance-id'] = id;
+      if (!isNaN(sec)) yang[base + '/admin-base-time/seconds'] = sec;
+      if (!isNaN(ns)) yang[base + '/admin-base-time/nanoseconds'] = ns;
+      if (!isNaN(num)) yang[base + '/admin-cycle-time/numerator'] = num;
+      if (!isNaN(den)) yang[base + '/admin-cycle-time/denominator'] = den;
+      if (states) yang[base + '/admin-gate-states'] = states;
+
+      const sidObj = yangToSid(yang);
+      const payload = cbor.encode(sidObj);
+      const resp = await sendCoapRequest('PUT', base, payload);
+      alert(`Stream gate updated (code ${resp.code})`);
+    } catch (e) {
+      alert('Failed to apply Stream Gate: ' + e.message);
     }
   };
 
