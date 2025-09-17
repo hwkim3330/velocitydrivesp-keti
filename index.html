@@ -5,22 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🚀 VelocityDRIVE-SP Web Control Center</title>
 <style>
-/* Modern Dark Theme */
+/* Light Theme (Apple-like) */
 :root {
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: #1a1f2e;
-  --bg-hover: #202938;
-  --border: #2d3748;
-  --text-primary: #e2e8f0;
-  --text-secondary: #a0aec0;
-  --text-muted: #718096;
-  --accent: #3b82f6;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fb;
+  --bg-card: #ffffff;
+  --bg-hover: #f0f3f9;
+  --border: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --accent: #3b82f6; /* Blue point color */
   --accent-hover: #2563eb;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
-  --code-bg: #0f172a;
+  --code-bg: #f8fafc;
+  --shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
 }
 
 * {
@@ -30,7 +31,7 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   height: 100vh;
@@ -39,13 +40,16 @@ body {
 
 /* Header */
 .header {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border);
   padding: 0.75rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .logo {
@@ -62,10 +66,11 @@ body {
   color: var(--text-primary);
   border: 1px solid var(--border);
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
   transition: all 0.2s;
+  box-shadow: var(--shadow);
 }
 
 .btn:hover {
@@ -122,7 +127,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 300px;
+  width: 320px;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   display: flex;
@@ -278,8 +283,9 @@ body {
 .panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   margin-bottom: 1rem;
+  box-shadow: var(--shadow);
 }
 
 .panel-header {
@@ -297,12 +303,12 @@ body {
 .log {
   background: var(--code-bg);
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   height: 300px;
   overflow-y: auto;
-  font-family: 'Monaco', 'Menlo', monospace;
-  font-size: 0.75rem;
-  padding: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.8rem;
+  padding: 0.75rem;
 }
 
 .log-entry {
@@ -496,6 +502,7 @@ select.form-input {
         <div class="tab active" data-tab="monitor">📊 Monitor</div>
         <div class="tab" data-tab="config">⚙️ Configuration</div>
         <div class="tab" data-tab="raw">🛠️ Raw CoAP</div>
+        <div class="tab" data-tab="tsn">🧩 TSN</div>
         <div class="tab" data-tab="test">🧪 Test</div>
         <div class="tab" data-tab="stats">📈 Statistics</div>
       </div>
@@ -620,6 +627,87 @@ select.form-input {
                 <div class="panel-header">Module Breakdown</div>
                 <div class="panel-content">
                   <div id="moduleStats" style="font-family: monospace; font-size: 0.875rem;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TSN Tab -->
+        <div id="tsnTab" style="display:none">
+          <div class="panel">
+            <div class="panel-header">🔧 TSN Quick Configure</div>
+            <div class="panel-content">
+              <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <div style="flex:1; min-width:300px;">
+                  <div class="form-group">
+                    <label class="form-label">Interface Name</label>
+                    <input class="form-input" id="tsnIface" placeholder="eth0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">PTP Instance</label>
+                    <input class="form-input" id="ptpInstance" placeholder="0" value="0">
+                  </div>
+                </div>
+                <div style="flex:2; min-width:320px;">
+                  <div class="alert alert-warning">Values map to YANG models. Use presets or edit JSON templates as needed.</div>
+                </div>
+              </div>
+
+              <div class="panel" style="margin-top:1rem;">
+                <div class="panel-header">⏱️ TAS (Time Aware Shaper)</div>
+                <div class="panel-content">
+                  <div class="form-group">
+                    <label class="form-label">Cycle Time (ns)</label>
+                    <input class="form-input" id="tasCycleNs" placeholder="1000000" value="1000000">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Admin Base Time (ns since epoch)</label>
+                    <input class="form-input" id="tasBaseTimeNs" placeholder="0" value="0">
+                    <small class="text-muted">0 = now on device</small>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Gate States (hex mask per entry, comma-separated)</label>
+                    <input class="form-input" id="tasGates" placeholder="FF,FF,FF">
+                  </div>
+                  <button class="btn btn-primary" onclick="applyTAS()">Apply TAS</button>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-header">📦 CBS (Credit Based Shaper)</div>
+                <div class="panel-content">
+                  <div class="form-group">
+                    <label class="form-label">Class (0-7)</label>
+                    <input class="form-input" id="cbsClass" placeholder="3" value="3">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Idle Slope (kbps)</label>
+                    <input class="form-input" id="cbsIdleSlope" placeholder="100000">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Send Slope (kbps)</label>
+                    <input class="form-input" id="cbsSendSlope" placeholder="-100000">
+                  </div>
+                  <button class="btn btn-primary" onclick="applyCBS()">Apply CBS</button>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-header">🕒 PTP</div>
+                <div class="panel-content">
+                  <div class="form-group">
+                    <label class="form-label">Domain Number</label>
+                    <input class="form-input" id="ptpDomain" placeholder="0" value="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Two-Step</label>
+                    <select class="form-input" id="ptpTwoStep">
+                      <option value="true">true</option>
+                      <option value="false">false</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-primary" onclick="applyPTP()">Apply PTP</button>
                 </div>
               </div>
             </div>
@@ -1976,7 +2064,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 
     const tabName = tab.dataset.tab;
-    document.getElementById(tabName + 'Tab').style.display = 'block';
+  document.getElementById(tabName + 'Tab').style.display = 'block';
   });
 });
 
@@ -2133,6 +2221,77 @@ document.addEventListener('DOMContentLoaded', () => {
       location.reload();
     } catch (e) {
       location.reload();
+    }
+  };
+
+  // TSN Apply functions (build minimal YANG JSON -> SID -> CBOR -> CoAP PUT)
+  window.applyTAS = async () => {
+    try {
+      const iface = (document.getElementById('tsnIface').value || '').trim();
+      if (!iface) return alert('Interface name is required');
+      const cycle = parseInt(document.getElementById('tasCycleNs').value || '0', 10);
+      const base = parseInt(document.getElementById('tasBaseTimeNs').value || '0', 10);
+      const gatesStr = (document.getElementById('tasGates').value || '').trim();
+      const gates = gatesStr ? gatesStr.split(',').map(s => s.trim()) : [];
+
+      // YANG path and minimal structure for TAS
+      const path = `/ieee802-dot1q-sched:interfaces/interface[name='${iface}']/gate-parameters`;
+      const yang = {};
+      yang[path] = {
+        'admin-base-time': base,
+        'admin-cycle-time': cycle,
+        // Represent control list minimally by masks if provided
+        'admin-control-list': gates.map((mask, idx) => ({ 'index': idx, 'gate-states': mask }))
+      };
+
+      const sidObj = yangToSid(yang);
+      const payload = cbor.encode(sidObj);
+      const resp = await sendCoapRequest('PUT', path, payload);
+      alert(`TAS updated (code ${resp.code})`);
+    } catch (e) {
+      alert('Failed to apply TAS: ' + e.message);
+    }
+  };
+
+  window.applyCBS = async () => {
+    try {
+      const iface = (document.getElementById('tsnIface').value || '').trim();
+      if (!iface) return alert('Interface name is required');
+      const cls = parseInt(document.getElementById('cbsClass').value || '0', 10);
+      const idle = parseInt(document.getElementById('cbsIdleSlope').value || '0', 10);
+      const send = parseInt(document.getElementById('cbsSendSlope').value || '0', 10);
+
+      const path = `/ieee802-dot1q-sched:interfaces/interface[name='${iface}']/scheduler`;
+      const yang = {};
+      yang[path] = {
+        'traffic-class-table': [{ 'traffic-class': cls, 'idle-slope': idle, 'send-slope': send }]
+      };
+
+      const sidObj = yangToSid(yang);
+      const payload = cbor.encode(sidObj);
+      const resp = await sendCoapRequest('PUT', path, payload);
+      alert(`CBS updated (code ${resp.code})`);
+    } catch (e) {
+      alert('Failed to apply CBS: ' + e.message);
+    }
+  };
+
+  window.applyPTP = async () => {
+    try {
+      const inst = (document.getElementById('ptpInstance').value || '0').trim();
+      const domain = parseInt(document.getElementById('ptpDomain').value || '0', 10);
+      const twoStep = document.getElementById('ptpTwoStep').value === 'true';
+
+      const path = `/ieee1588-ptp:ptp/instance[instance-index='${inst}']`;
+      const yang = {};
+      yang[path] = { 'domain-number': domain, 'two-step-flag': twoStep };
+
+      const sidObj = yangToSid(yang);
+      const payload = cbor.encode(sidObj);
+      const resp = await sendCoapRequest('PUT', path, payload);
+      alert(`PTP updated (code ${resp.code})`);
+    } catch (e) {
+      alert('Failed to apply PTP: ' + e.message);
     }
   };
   
