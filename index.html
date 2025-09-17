@@ -56,13 +56,11 @@ body {
 
 /* Header */
 .header {
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
-  padding: 0.75rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  height: 60px;
+  padding: 1rem;
+  display: block;
+  height: auto;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -76,6 +74,22 @@ body {
   -webkit-text-fill-color: transparent;
   margin-right: auto;
 }
+
+/* Header card */
+.header-card{
+  background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 20px rgba(0,0,0,.06);
+}
+.header-content{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px; flex-wrap:wrap; }
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-logo{ height:32px; width:auto; object-fit:contain; }
+.brand-title{ font-size:20px; font-weight:800; color:#111827; }
+.status-pill{ display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid var(--border); border-radius:999px; padding:8px 12px; }
+.status-pill .dot{ width:10px; height:10px; border-radius:50%; background:var(--text-muted); display:inline-block; }
+.status-pill.connected .dot{ background: var(--success); }
+.stats{ display:flex; align-items:center; gap:18px; }
+.stat{ text-align:center; }
+.stat-label{ font-size:12px; color:var(--text-secondary); }
+.stat-value{ font-size:20px; font-weight:800; color: var(--accent); }
 
 .btn {
   background: var(--bg-card);
@@ -490,24 +504,37 @@ select.form-input {
 </head>
 <body>
   <div class="header">
-    <img src="assets/keti.png" alt="KETI" style="height:36px;width:auto;margin-right:8px;object-fit:contain;"/>
-    <div class="logo" style="-webkit-text-fill-color: initial;background:none;font-weight:700;color:#111827;">VelocityDRIVE-SP</div>
-    <div class="status" id="connectionStatus">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">Disconnected</span>
+    <div class="header-card">
+      <div class="header-content">
+        <div class="brand">
+          <img src="assets/keti.png" alt="KETI" class="brand-logo"/>
+          <div class="brand-title">VelocityDRIVE-SP</div>
+        </div>
+        <div class="controls">
+          <div class="status-pill" id="connectionStatus">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">Disconnected</span>
+          </div>
+          <button class="btn btn-primary" id="connectBtn" onclick="connectDevice()">Connect</button>
+          <button class="btn btn-danger" id="disconnectBtn" onclick="disconnectDevice()" style="display:none;">Disconnect</button>
+          <input type="file" id="sidFile" accept=".json,.js,.sid,.yaml,.yml" style="display:none" onchange="onImportSidFile(event)">
+          <input type="file" id="coreconfDir" webkitdirectory directory multiple style="display:none" onchange="onImportCoreconfFolder(event)">
+          <input type="file" id="coreconfArchive" accept=".tgz,.tar,.tar.gz" style="display:none" onchange="onImportCoreconfArchive(event)">
+          <button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button>
+          <button class="btn" onclick="document.getElementById('coreconfArchive').click()">Import Archive</button>
+          <button class="btn" onclick="fetchLatestCoreconf()">Fetch Latest</button>
+          <button class="btn" onclick="document.getElementById('coreconfDir').click()">Import Folder</button>
+          <button class="btn" onclick="exportSidMap()">Export</button>
+          <button class="btn" onclick="resetSidMap()">Reset</button>
+          <button class="btn" onclick="toggleTouchMode()">Touch</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">Mappings</div><div id="statMappings" class="stat-value">0</div></div>
+          <div class="stat"><div class="stat-label">Modules</div><div id="statModules" class="stat-value">0</div></div>
+          <div class="stat"><div class="stat-label">Device</div><div id="statDevice" class="stat-value">OFF</div></div>
+        </div>
+      </div>
     </div>
-    <button class="btn btn-primary" id="connectBtn" onclick="connectDevice()">Connect</button>
-    <button class="btn btn-danger" id="disconnectBtn" onclick="disconnectDevice()" style="display:none;">Disconnect</button>
-    <input type="file" id="sidFile" accept=".json,.js,.sid,.yaml,.yml" style="display:none" onchange="onImportSidFile(event)">
-    <input type="file" id="coreconfDir" webkitdirectory directory multiple style="display:none" onchange="onImportCoreconfFolder(event)">
-    <button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button>
-    <input type="file" id="coreconfArchive" accept=".tgz,.tar,.tar.gz" style="display:none" onchange="onImportCoreconfArchive(event)">
-    <button class="btn" onclick="document.getElementById('coreconfArchive').click()">Import Archive</button>
-    <button class="btn" onclick="fetchLatestCoreconf()">Fetch Latest</button>
-    <button class="btn" onclick="document.getElementById('coreconfDir').click()">Import Coreconf Folder</button>
-    <button class="btn" onclick="exportSidMap()">Export SID</button>
-    <button class="btn" onclick="resetSidMap()">Reset SID</button>
-    <button class="btn" onclick="toggleTouchMode()">Touch Mode</button>
   </div>
 
   <div class="container">
@@ -2109,11 +2136,14 @@ document.querySelectorAll('.tree-item').forEach(item => {
 function updateStatistics() {
   if (window.yangSidMap) {
     document.getElementById('totalSids').textContent = Object.keys(window.yangSidMap).length;
+    const m = Object.keys(window.yangSidMap).length;
+    const el = document.getElementById('statMappings'); if (el) el.textContent = m;
   }
   
   if (window.moduleStats) {
     const totalModules = Object.keys(window.moduleStats).filter(module => window.moduleStats[module] > 0).length;
     document.getElementById('totalModules').textContent = totalModules;
+    const em = document.getElementById('statModules'); if (em) em.textContent = totalModules;
     
     // Update module breakdown
     const moduleStatsDiv = document.getElementById('moduleStats');
@@ -2179,6 +2209,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('configPath').value = path;
     logMessage('INFO', 'SELECT', sid, path.length, `Selected: ${path}`);
   };
+
+  // Update device status pill text
+  const devEl = document.getElementById('statDevice');
+  const statusPill = document.getElementById('connectionStatus');
+  const setDeviceStat = () => {
+    if (devEl) devEl.textContent = isConnected ? 'ON' : 'OFF';
+    if (statusPill) statusPill.classList.toggle('connected', !!isConnected);
+  };
+  setInterval(setDeviceStat, 500);
 
   // Expose import/export utilities
   window.onImportSidFile = async (e) => {
