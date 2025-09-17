@@ -1,0 +1,9 @@
+:root{
+  --blue:#007AFF; --blue2:#0A84FF; --green:#34C759; --red:#FF3B30;
+  --bg:#FFFFFF; --bg2:#F2F2F7; --line:#E5E5EA; --text:#111827; --muted:#6B7280;
+  --r-lg:20px; --r:14px; --h:52px; --tapY:14px; --tapX:18px;
+  --shadow:0 8px 20px rgba(17,24,39,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg2);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+
