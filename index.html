@@ -2285,9 +2285,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch {}
 
       let url = '';
+      let corsProxy = '';
       if (cfg && Array.isArray(cfg.coreconfSources)) {
         const src = cfg.coreconfSources.find(s => (s.type === 'tgzUrl' || s.type === 'tarUrl') && s.url);
-        if (src) url = src.url;
+        if (src) { url = src.url; corsProxy = cfg.corsProxy || src.proxy || ''; }
       }
       if (!url) {
         url = prompt('Enter Coreconf archive URL (.tgz/.tar):') || '';
@@ -2295,7 +2296,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!url) return;
 
       logMessage('INFO', 'FETCH', null, 0, `Downloading: ${url}`);
-      const r = await fetch(url, { cache: 'no-store' });
+      const fetchUrl = corsProxy ? `${corsProxy.replace(/\/$/, '')}/fetch?url=${encodeURIComponent(url)}` : url;
+      const r = await fetch(fetchUrl, { cache: 'no-store' });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const buf = new Uint8Array(await r.arrayBuffer());
       const sidMap = await extractSidFromArchive(buf, url.toLowerCase());
@@ -2535,8 +2537,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Try stored config
     const storedCfg = localStorage.getItem('velocitydrivesp_coreconf_config');
     let sources = [];
+    let cfg = null;
     if (storedCfg) {
-      try { sources = JSON.parse(storedCfg)?.coreconfSources || []; } catch {}
+      try { cfg = JSON.parse(storedCfg); sources = cfg?.coreconfSources || []; } catch {}
     }
 
     // Try config.json if no stored config
@@ -2544,11 +2547,12 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const res = await fetch('config.json', { cache: 'no-store' });
         if (res.ok) {
-          const cfg = await res.json();
+          cfg = await res.json();
           sources = cfg?.coreconfSources || [];
         }
       } catch {}
     }
+    window.CoreconfCfg = cfg || {};
 
     for (const src of sources) {
       if (src.type === 'githubContents') {
@@ -2557,7 +2561,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (src.type === 'tgzUrl' || src.type === 'tarUrl') {
         if (!src.url) continue;
         try {
-          const r = await fetch(src.url, { cache: 'no-store' });
+          const proxyBase = src.proxy || (window.CoreconfCfg && window.CoreconfCfg.corsProxy) || '';
+          const fetchUrl = proxyBase ? `${proxyBase.replace(/\/$/, '')}/fetch?url=${encodeURIComponent(src.url)}` : src.url;
+          const r = await fetch(fetchUrl, { cache: 'no-store' });
           if (!r.ok) continue;
           const buf = new Uint8Array(await r.arrayBuffer());
           const sidMap = await extractSidFromArchive(buf, src.type === 'tgzUrl' ? 'coreconf.tgz' : 'coreconf.tar');

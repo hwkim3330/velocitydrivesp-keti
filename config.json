@@ -1,4 +1,5 @@
 {
+  "corsProxy": "",
   "coreconfSources": [
     {
       "type": "githubContents",
@@ -8,7 +9,8 @@
     },
     {
       "type": "tgzUrl",
-      "url": ""
+      "url": "",
+      "proxy": ""
     }
   ]
 }
