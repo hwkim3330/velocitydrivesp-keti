@@ -1,5 +1,5 @@
 {
-  "corsProxy": "",
+  "corsProxy": "https://corsproxy.io/?",
   "coreconfSources": [
     {
       "type": "githubContents",
