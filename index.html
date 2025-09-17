@@ -87,6 +87,11 @@
 
       <section id="p-tsn" class="card" style="display:none"><div class="card-h">TSN</div><div class="card-b">
         <div class="row"><input class="inp" id="tsnIface" placeholder="Interface (e.g., eth0)" style="flex:2"><select class="inp" id="ifaceSelect" style="flex:2"><option value="">(Load interfaces)</option></select><button class="btn" onclick="loadInterfaces()">Load</button></div>
+        <div class="row" style="margin-top:8px;gap:8px">
+          <select class="inp" id="tsnPreset" style="flex:2"><option value="">(Preset 선택)</option></select>
+          <button class="btn" onclick="applyPresetToFields()">프리셋 적용</button>
+          <button class="btn p" onclick="applyPresetAll()">프리셋 즉시 적용</button>
+        </div>
         <div class="grid" style="margin-top:12px">
           <div class="card"><div class="card-h">TAS</div><div class="card-b"><input class="inp" id="tasCycleNs" placeholder="Cycle ns" value="1000000" style="margin-bottom:8px"><input class="inp" id="tasBaseTimeNs" placeholder="Base time ns (0=now)" value="0" style="margin-bottom:8px"><input class="inp" id="tasGates" placeholder="Gate masks e.g., FF,FF,FF" style="margin-bottom:8px"><button class="btn p" onclick="applyTAS()">Apply TAS</button></div></div>
           <div class="card"><div class="card-h">CBS</div><div class="card-b"><input class="inp" id="cbsClass" placeholder="Class (0-7)" value="3" style="margin-bottom:8px"><input class="inp" id="cbsIdleSlope" placeholder="Idle Slope (kbps)" style="margin-bottom:8px"><input class="inp" id="cbsSendSlope" placeholder="Send Slope (kbps)" style="margin-bottom:8px"><button class="btn p" onclick="applyCBS()">Apply CBS</button></div></div>
@@ -110,6 +115,7 @@
   <script src="js/storage.js"></script>
   <script src="js/sid-mapping.js"></script>
   <script src="js/yang-tree-builder.js"></script>
+  <script src="js/tsn-presets.js"></script>
   <script>
   // ===== State & Nav =====
   let port=null, reader=null, writer=null, isConnected=false, selectedPath='';
@@ -167,7 +173,9 @@
   document.addEventListener('DOMContentLoaded',()=>{
     // load cached sid map
     try{const s=window.SIDStorage?.load&&window.SIDStorage.load(); if(s&&Object.keys(s).length){window.yangSidMap=s}}catch{}
-    renderYangTree(); setInterval(()=>{const on=!!isConnected;byId('sDev').textContent=on?'ON':'OFF';const p=byId('pill'),d=byId('dot'),t=byId('ptext');const p2=byId('pill2'),d2=byId('dot2'),t2=byId('ptext2');if(p){p.classList.toggle('on',on); if(d) d.style.background=on?'var(--ok)':'var(--muted)'; if(t) t.textContent=on?'Connected':'Disconnected'}if(p2){p2.classList.toggle('on',on); if(d2) d2.style.background=on?'var(--ok)':'var(--muted)'; if(t2) t2.textContent=on?'Connected':'Disconnected'}const m=Object.keys(window.yangSidMap||{}).length; byId('sMap').textContent=m; byId('sMap2').textContent=m; const ms=window.moduleStats?Object.keys(window.moduleStats).filter(k=>window.moduleStats[k]>0).length:0; byId('sMod').textContent=ms; byId('sMod2').textContent=ms; },500);
+    renderYangTree(); setInterval(()=>{const on=!!isConnected;byId('sDev').textContent=on?'ON':'OFF';const p=byId('pill'),d=byId('dot'),t=byId('ptext');const p2=byId('pill2'),d2=byId('dot2'),t2=byId('ptext2');if(p){p.classList.toggle('on',on); if(d) d.style.background=on?'var(--ok)':'var(--muted)'; if(t) t.textContent=on?'Connected':'Disconnected'}if(p2){p2.classList.toggle('on',on); if(d2) d2.style.background=on?'var(--ok)':'var(--muted)'; if(t2) t2.textContent=on?'Connected':'Disconnected'}const m=Object.keys(window.yangSidMap||{}).length; const m1=byId('sMap'); if(m1) m1.textContent=m; const m2=byId('sMap2'); if(m2) m2.textContent=m; const ms=window.moduleStats?Object.keys(window.moduleStats).filter(k=>window.moduleStats[k]>0).length:0; const mm1=byId('sMod'); if(mm1) mm1.textContent=ms; const mm2=byId('sMod2'); if(mm2) mm2.textContent=ms; },500);
+    // populate presets
+    try{ const sel=document.getElementById('tsnPreset'); if (sel && window.TSNPRESETS){ Object.keys(window.TSNPRESETS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);}); } }catch{}
   });
   </script>
 </body>
