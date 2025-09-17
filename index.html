@@ -503,6 +503,7 @@ select.form-input {
     <button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button>
     <input type="file" id="coreconfArchive" accept=".tgz,.tar,.tar.gz" style="display:none" onchange="onImportCoreconfArchive(event)">
     <button class="btn" onclick="document.getElementById('coreconfArchive').click()">Import Archive</button>
+    <button class="btn" onclick="fetchLatestCoreconf()">Fetch Latest</button>
     <button class="btn" onclick="document.getElementById('coreconfDir').click()">Import Coreconf Folder</button>
     <button class="btn" onclick="exportSidMap()">Export SID</button>
     <button class="btn" onclick="resetSidMap()">Reset SID</button>
@@ -2271,6 +2272,49 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Failed to import archive: ' + err.message);
     } finally {
       e.target.value = '';
+    }
+  };
+
+  // Fetch latest Coreconf archive from config (or prompt)
+  window.fetchLatestCoreconf = async () => {
+    try {
+      let cfg = null;
+      try {
+        const res = await fetch('config.json', { cache: 'no-store' });
+        if (res.ok) cfg = await res.json();
+      } catch {}
+
+      let url = '';
+      if (cfg && Array.isArray(cfg.coreconfSources)) {
+        const src = cfg.coreconfSources.find(s => (s.type === 'tgzUrl' || s.type === 'tarUrl') && s.url);
+        if (src) url = src.url;
+      }
+      if (!url) {
+        url = prompt('Enter Coreconf archive URL (.tgz/.tar):') || '';
+      }
+      if (!url) return;
+
+      logMessage('INFO', 'FETCH', null, 0, `Downloading: ${url}`);
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const buf = new Uint8Array(await r.arrayBuffer());
+      const sidMap = await extractSidFromArchive(buf, url.toLowerCase());
+      if (!sidMap || Object.keys(sidMap.mapping).length === 0) throw new Error('No .sid entries found');
+
+      window.yangSidMap = sidMap.mapping;
+      window.moduleStats = sidMap.moduleStats;
+      window.SIDStorage?.save && window.SIDStorage.save(sidMap.mapping);
+      try { localStorage.setItem('velocitydrivesp_sid_last_updated', String(Date.now())); } catch {}
+      if (window.YangTreeBuilder) {
+        const treeBuilder = new YangTreeBuilder(window.yangSidMap);
+        treeBuilder.renderTree('yangTree');
+      }
+      updateStatistics?.();
+      logMessage('INFO', 'FETCH', null, Object.keys(sidMap.mapping).length, 'Coreconf applied');
+      alert('Latest Coreconf applied');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to fetch latest Coreconf: ' + e.message + '\nNote: The server must allow cross-origin requests.');
     }
   };
 
