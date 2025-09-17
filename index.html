@@ -2296,7 +2296,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!url) return;
 
       logMessage('INFO', 'FETCH', null, 0, `Downloading: ${url}`);
-      const fetchUrl = corsProxy ? `${corsProxy.replace(/\/$/, '')}/fetch?url=${encodeURIComponent(url)}` : url;
+      const fetchUrl = buildProxiedUrl(url, corsProxy);
       const r = await fetch(fetchUrl, { cache: 'no-store' });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const buf = new Uint8Array(await r.arrayBuffer());
@@ -2562,7 +2562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!src.url) continue;
         try {
           const proxyBase = src.proxy || (window.CoreconfCfg && window.CoreconfCfg.corsProxy) || '';
-          const fetchUrl = proxyBase ? `${proxyBase.replace(/\/$/, '')}/fetch?url=${encodeURIComponent(src.url)}` : src.url;
+          const fetchUrl = buildProxiedUrl(src.url, proxyBase);
           const r = await fetch(fetchUrl, { cache: 'no-store' });
           if (!r.ok) continue;
           const buf = new Uint8Array(await r.arrayBuffer());
@@ -2641,6 +2641,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------- Archive extraction helpers (tgz/tar) --------
+  function buildProxiedUrl(url, proxyBase) {
+    if (!proxyBase) return url;
+    const base = String(proxyBase).trim();
+    // Support Cloudflare Worker style: ends with /fetch or /proxy
+    if (/\/(fetch|proxy)$/i.test(base)) {
+      return `${base.replace(/\/$/, '')}?url=${encodeURIComponent(url)}`;
+    }
+    // Support corsproxy.io style: https://corsproxy.io/?
+    if (/corsproxy\.io\/?\?$/.test(base)) {
+      return `${base}${encodeURIComponent(url)}`;
+    }
+    // Default to worker-style endpoint prefix
+    return `${base.replace(/\/$/, '')}/fetch?url=${encodeURIComponent(url)}`;
+  }
   async function extractSidFromArchive(bytes, name) {
     const lower = (name || '').toLowerCase();
     let tarBytes = bytes;
