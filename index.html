@@ -471,7 +471,9 @@ select.form-input {
     <button class="btn btn-primary" id="connectBtn" onclick="connectDevice()">Connect</button>
     <button class="btn btn-danger" id="disconnectBtn" onclick="disconnectDevice()" style="display:none;">Disconnect</button>
     <input type="file" id="sidFile" accept=".json,.js,.sid,.yaml,.yml" style="display:none" onchange="onImportSidFile(event)">
+    <input type="file" id="coreconfDir" webkitdirectory directory multiple style="display:none" onchange="onImportCoreconfFolder(event)">
     <button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button>
+    <button class="btn" onclick="document.getElementById('coreconfDir').click()">Import Coreconf Folder</button>
     <button class="btn" onclick="exportSidMap()">Export SID</button>
     <button class="btn" onclick="resetSidMap()">Reset SID</button>
   </div>
@@ -2024,6 +2026,17 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.warn('SID storage load failed:', e);
   }
+
+  // If no mapping yet, auto-fetch from GitHub repo's coreconf folder
+  if ((!window.yangSidMap || Object.keys(window.yangSidMap).length === 0)) {
+    autoLoadCoreconfFromGitHub()
+      .then(loaded => {
+        if (loaded) {
+          logMessage('INFO', 'SID', null, 0, `Auto-fetched coreconf: ${Object.keys(window.yangSidMap).length} entries`);
+        }
+      })
+      .catch(err => console.warn('Auto coreconf load failed:', err));
+  }
   
   // Initialize YANG Tree Browser
   if (window.yangSidMap && window.YangTreeBuilder) {
@@ -2082,6 +2095,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  window.onImportCoreconfFolder = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    try {
+      if (!window.SIDStorage?.fromFileList) throw new Error('Importer not loaded');
+      const { mapping, moduleStats } = await window.SIDStorage.fromFileList(files);
+      if (!mapping || Object.keys(mapping).length === 0) throw new Error('No mappings parsed');
+      window.SIDStorage.save(mapping);
+      window.yangSidMap = mapping;
+      window.moduleStats = moduleStats;
+      if (window.YangTreeBuilder) {
+        const treeBuilder = new YangTreeBuilder(window.yangSidMap);
+        treeBuilder.renderTree('yangTree');
+      }
+      updateStatistics?.();
+      logMessage('INFO', 'SID', null, 0, `Imported coreconf folder: ${Object.keys(mapping).length} entries`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to import coreconf folder: ' + err.message);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   window.resetSidMap = () => {
     try {
       localStorage.removeItem(window.SIDStorage.STORAGE_KEY_SID);
@@ -2091,6 +2128,66 @@ document.addEventListener('DOMContentLoaded', () => {
       location.reload();
     }
   };
+  
+  async function autoLoadCoreconfFromGitHub() {
+    try {
+      const repo = 'hwkim3330/velocitydrivesp-keti';
+      const path = 'coreconf'; // place .sid files here in the repo
+      const api = `https://api.github.com/repos/${repo}/contents/${encodeURIComponent(path)}`;
+      const res = await fetch(api, { headers: { 'Accept': 'application/vnd.github+json' } });
+      if (!res.ok) return false;
+      const list = await res.json();
+      const sidFiles = (Array.isArray(list) ? list : []).filter(item => item.type === 'file' && /\.sid$/i.test(item.name));
+      if (sidFiles.length === 0) return false;
+
+      // Fetch with limited concurrency
+      const concurrency = 8;
+      const mapping = {};
+      const moduleStats = {};
+      let idx = 0;
+      async function worker() {
+        while (idx < sidFiles.length) {
+          const i = idx++;
+          const item = sidFiles[i];
+          try {
+            const r = await fetch(item.download_url, { cache: 'no-store' });
+            if (!r.ok) continue;
+            const json = await r.json();
+            const moduleName = json['module-name'] || 'unknown';
+            let count = 0;
+            for (const it of json.items || []) {
+              if (it.namespace === 'data' && it.sid && it.identifier) {
+                mapping[it.sid] = it.identifier;
+                count++;
+              }
+            }
+            moduleStats[moduleName] = count;
+          } catch (_) {
+            // ignore
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(concurrency, sidFiles.length) }, () => worker()));
+
+      if (Object.keys(mapping).length > 0) {
+        window.yangSidMap = mapping;
+        window.moduleStats = moduleStats;
+        window.SIDStorage?.save && window.SIDStorage.save(mapping);
+
+        // Render tree if ready
+        if (window.YangTreeBuilder) {
+          const treeBuilder = new YangTreeBuilder(window.yangSidMap);
+          treeBuilder.renderTree('yangTree');
+        }
+        updateStatistics?.();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('Auto-load coreconf error:', e);
+      return false;
+    }
+  }
 });
 </script>
 </body>

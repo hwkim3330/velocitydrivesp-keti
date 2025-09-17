@@ -24,6 +24,34 @@
     }
   }
 
+  async function buildSidMapFromFileList(fileList) {
+    const files = Array.from(fileList).filter(f => f.name.endsWith('.sid'));
+    if (files.length === 0) throw new Error('No .sid files found in selection');
+
+    const mapping = {};
+    const moduleStats = {};
+
+    for (const file of files) {
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        const moduleName = json['module-name'] || 'unknown';
+        let count = 0;
+        for (const item of json.items || []) {
+          if (item.namespace === 'data' && item.sid && item.identifier) {
+            mapping[item.sid] = item.identifier;
+            count++;
+          }
+        }
+        moduleStats[moduleName] = count;
+      } catch (e) {
+        console.warn('Failed to parse SID file:', file.name, e);
+      }
+    }
+
+    return { mapping, moduleStats };
+  }
+
   function parseSidMapText(text) {
     // Accept JSON or JS file that defines `const yangSidMap = {...}`
     try {
@@ -63,8 +91,8 @@
     load: loadSidMapFromStorage,
     save: saveSidMapToStorage,
     parse: parseSidMapText,
+    fromFileList: buildSidMapFromFileList,
     download,
     STORAGE_KEY_SID
   };
 })();
-
