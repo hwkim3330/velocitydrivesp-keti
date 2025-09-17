@@ -5,7 +5,10 @@
       "owner": "hwkim3330",
       "repo": "velocitydrivesp-keti",
       "path": "coreconf"
+    },
+    {
+      "type": "tgzUrl",
+      "url": ""
     }
   ]
 }
-

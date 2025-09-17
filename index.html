@@ -490,7 +490,8 @@ select.form-input {
 </head>
 <body>
   <div class="header">
-    <div class="logo">🚀 VelocityDRIVE-SP Web Control Center</div>
+    <img src="assets/keti.png" alt="KETI" style="height:36px;width:auto;margin-right:8px;object-fit:contain;"/>
+    <div class="logo" style="-webkit-text-fill-color: initial;background:none;font-weight:700;color:#111827;">VelocityDRIVE-SP</div>
     <div class="status" id="connectionStatus">
       <div class="status-dot" id="statusDot"></div>
       <span id="statusText">Disconnected</span>
@@ -500,6 +501,8 @@ select.form-input {
     <input type="file" id="sidFile" accept=".json,.js,.sid,.yaml,.yml" style="display:none" onchange="onImportSidFile(event)">
     <input type="file" id="coreconfDir" webkitdirectory directory multiple style="display:none" onchange="onImportCoreconfFolder(event)">
     <button class="btn" onclick="document.getElementById('sidFile').click()">Import SID</button>
+    <input type="file" id="coreconfArchive" accept=".tgz,.tar,.tar.gz" style="display:none" onchange="onImportCoreconfArchive(event)">
+    <button class="btn" onclick="document.getElementById('coreconfArchive').click()">Import Archive</button>
     <button class="btn" onclick="document.getElementById('coreconfDir').click()">Import Coreconf Folder</button>
     <button class="btn" onclick="exportSidMap()">Export SID</button>
     <button class="btn" onclick="resetSidMap()">Reset SID</button>
@@ -2247,6 +2250,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Import archive (.tgz/.tar)
+  window.onImportCoreconfArchive = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const buf = await file.arrayBuffer();
+      const sidMap = await extractSidFromArchive(new Uint8Array(buf), file.name);
+      if (!sidMap || Object.keys(sidMap.mapping).length === 0) throw new Error('No .sid files found');
+      window.yangSidMap = sidMap.mapping;
+      window.moduleStats = sidMap.moduleStats;
+      window.SIDStorage?.save && window.SIDStorage.save(sidMap.mapping);
+      if (window.YangTreeBuilder) {
+        const treeBuilder = new YangTreeBuilder(window.yangSidMap);
+        treeBuilder.renderTree('yangTree');
+      }
+      updateStatistics?.();
+      logMessage('INFO', 'SID', null, 0, `Imported archive: ${Object.keys(sidMap.mapping).length} entries`);
+    } catch (err) {
+      alert('Failed to import archive: ' + err.message);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   // Load interfaces via CORECONF GET and populate dropdown
   window.loadInterfaces = async () => {
     try {
@@ -2483,6 +2510,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (src.type === 'githubContents') {
         const ok = await loadFromGitHubContents(src.owner, src.repo, src.path || '');
         if (ok) return true;
+      } else if (src.type === 'tgzUrl' || src.type === 'tarUrl') {
+        if (!src.url) continue;
+        try {
+          const r = await fetch(src.url, { cache: 'no-store' });
+          if (!r.ok) continue;
+          const buf = new Uint8Array(await r.arrayBuffer());
+          const sidMap = await extractSidFromArchive(buf, src.type === 'tgzUrl' ? 'coreconf.tgz' : 'coreconf.tar');
+          if (sidMap && Object.keys(sidMap.mapping).length > 0) {
+            window.yangSidMap = sidMap.mapping;
+            window.moduleStats = sidMap.moduleStats;
+            window.SIDStorage?.save && window.SIDStorage.save(sidMap.mapping);
+            if (window.YangTreeBuilder) {
+              const treeBuilder = new YangTreeBuilder(window.yangSidMap);
+              treeBuilder.renderTree('yangTree');
+            }
+            updateStatistics?.();
+            try { localStorage.setItem('velocitydrivesp_sid_last_updated', String(Date.now())); } catch {}
+            return true;
+          }
+        } catch (e) {
+          console.warn('Archive load error:', e);
+        }
       }
       // Future: add 'zipUrl' with JSZip/tar support here
     }
@@ -2539,6 +2588,83 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return false;
     } catch { return false; }
+  }
+
+  // -------- Archive extraction helpers (tgz/tar) --------
+  async function extractSidFromArchive(bytes, name) {
+    const lower = (name || '').toLowerCase();
+    let tarBytes = bytes;
+    if (lower.endsWith('.tgz') || lower.endsWith('.tar.gz') || looksLikeGzip(bytes)) {
+      // Use DecompressionStream if available to gunzip
+      if (typeof DecompressionStream === 'undefined') {
+        throw new Error('Gzip decompression not supported in this browser');
+      }
+      const ds = new DecompressionStream('gzip');
+      const gunzipped = await streamToUint8(bytes, ds);
+      tarBytes = gunzipped;
+    }
+    const files = parseTar(tarBytes);
+    const mapping = {};
+    const moduleStats = {};
+    for (const f of files) {
+      if (f.name.endsWith('.sid')) {
+        try {
+          const txt = new TextDecoder().decode(f.data);
+          const json = JSON.parse(txt);
+          const moduleName = json['module-name'] || 'unknown';
+          let count = 0;
+          for (const it of json.items || []) {
+            if (it.namespace === 'data' && it.sid && it.identifier) {
+              mapping[it.sid] = it.identifier;
+              count++;
+            }
+          }
+          moduleStats[moduleName] = count;
+        } catch {}
+      }
+    }
+    return { mapping, moduleStats };
+  }
+
+  function looksLikeGzip(u8) {
+    return u8 && u8.length > 2 && u8[0] === 0x1f && u8[1] === 0x8b;
+  }
+
+  async function streamToUint8(inputU8, decompressor) {
+    const rs = new Response(inputU8).body;
+    const ds = rs.pipeThrough(decompressor);
+    const buf = await new Response(ds).arrayBuffer();
+    return new Uint8Array(buf);
+  }
+
+  function parseTar(u8) {
+    // Minimal POSIX tar reader
+    const files = [];
+    const block = 512;
+    let i = 0;
+    while (i + block <= u8.length) {
+      const header = u8.subarray(i, i + block);
+      // End of archive: two consecutive zero blocks
+      const isZero = header.every(b => b === 0);
+      if (isZero) break;
+      const name = getString(header, 0, 100).replace(/\0.*$/, '');
+      const sizeOct = getString(header, 124, 12).replace(/\0.*$/, '').trim();
+      const size = parseInt(sizeOct, 8) || 0;
+      const contentStart = i + block;
+      const contentEnd = contentStart + size;
+      const data = u8.subarray(contentStart, contentEnd);
+      if (name) {
+        files.push({ name, data });
+      }
+      // Move to next 512 block boundary
+      const next = contentEnd + (block - (size % block || block));
+      i = next;
+    }
+    return files;
+  }
+
+  function getString(u8, start, len) {
+    return new TextDecoder().decode(u8.subarray(start, start + len));
   }
 });
 </script>
